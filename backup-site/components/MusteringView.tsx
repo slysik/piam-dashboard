@@ -10,7 +10,7 @@ interface Person {
   id: string;
   name: string;
   department: string;
-  status: 'Accounted' | 'Missing' | 'En Route';
+  status: 'Checked In' | 'Checked Out' | 'Marked Safe';
   lastSeen: string;
   lastLocation: string;
   checkInTime: string | null;
@@ -37,16 +37,16 @@ const musteringData: Record<string, { people: Person[]; musterPoints: MusterPoin
       { id: '3', name: 'Athletic Field', capacity: 300, current: 12, status: 'Active' },
     ],
     people: [
-      { id: '1', name: 'John Smith', department: 'Engineering', status: 'Accounted', lastSeen: '10:47 AM', lastLocation: 'Parking Lot A', checkInTime: '10:47 AM', badgeId: 'B123456', phone: '+1 (555) 123-4567' },
-      { id: '2', name: 'Jane Doe', department: 'Finance', status: 'Missing', lastSeen: '10:32 AM', lastLocation: 'Floor 3 - Finance Wing', checkInTime: null, badgeId: 'B789012', phone: '+1 (555) 234-5678' },
-      { id: '3', name: 'Bob Wilson', department: 'Facilities', status: 'Accounted', lastSeen: '10:48 AM', lastLocation: 'Parking Lot A', checkInTime: '10:48 AM', badgeId: 'B345678', phone: '+1 (555) 345-6789' },
-      { id: '4', name: 'Alice Brown', department: 'HR', status: 'En Route', lastSeen: '10:46 AM', lastLocation: 'Stairwell B - Floor 2', checkInTime: null, badgeId: 'B901234', phone: '+1 (555) 456-7890' },
-      { id: '5', name: 'Charlie Davis', department: 'IT', status: 'Accounted', lastSeen: '10:49 AM', lastLocation: 'Parking Lot B', checkInTime: '10:49 AM', badgeId: 'B567890', phone: '+1 (555) 567-8901' },
-      { id: '6', name: 'Diana Evans', department: 'Executive', status: 'Missing', lastSeen: '10:15 AM', lastLocation: 'Executive Suite - Floor 5', checkInTime: null, badgeId: 'B111222', phone: '+1 (555) 678-9012' },
-      { id: '7', name: 'Edward Foster', department: 'Sales', status: 'Accounted', lastSeen: '10:50 AM', lastLocation: 'Parking Lot A', checkInTime: '10:50 AM', badgeId: 'B333444', phone: '+1 (555) 789-0123' },
-      { id: '8', name: 'Fiona Garcia', department: 'R&D', status: 'En Route', lastSeen: '10:47 AM', lastLocation: 'Emergency Exit - Lab A', checkInTime: null, badgeId: 'B555666', phone: '+1 (555) 890-1234' },
-      { id: '9', name: 'George Harris', department: 'Marketing', status: 'Accounted', lastSeen: '10:51 AM', lastLocation: 'Parking Lot B', checkInTime: '10:51 AM', badgeId: 'B777888', phone: '+1 (555) 901-2345' },
-      { id: '10', name: 'Helen Irving', department: 'Legal', status: 'Missing', lastSeen: '09:45 AM', lastLocation: 'Conference Room 3B', checkInTime: null, badgeId: 'B999000', phone: '+1 (555) 012-3456' },
+      { id: '1', name: 'John Smith', department: 'Engineering', status: 'Checked In', lastSeen: '10:47 AM', lastLocation: 'Parking Lot A', checkInTime: '10:47 AM', badgeId: 'B123456', phone: '+1 (555) 123-4567' },
+      { id: '2', name: 'Jane Doe', department: 'Finance', status: 'Checked Out', lastSeen: '10:32 AM', lastLocation: 'Floor 3 - Finance Wing', checkInTime: null, badgeId: 'B789012', phone: '+1 (555) 234-5678' },
+      { id: '3', name: 'Bob Wilson', department: 'Facilities', status: 'Checked In', lastSeen: '10:48 AM', lastLocation: 'Parking Lot A', checkInTime: '10:48 AM', badgeId: 'B345678', phone: '+1 (555) 345-6789' },
+      { id: '4', name: 'Alice Brown', department: 'HR', status: 'Marked Safe', lastSeen: '10:46 AM', lastLocation: 'Stairwell B - Floor 2', checkInTime: null, badgeId: 'B901234', phone: '+1 (555) 456-7890' },
+      { id: '5', name: 'Charlie Davis', department: 'IT', status: 'Checked In', lastSeen: '10:49 AM', lastLocation: 'Parking Lot B', checkInTime: '10:49 AM', badgeId: 'B567890', phone: '+1 (555) 567-8901' },
+      { id: '6', name: 'Diana Evans', department: 'Executive', status: 'Checked Out', lastSeen: '10:15 AM', lastLocation: 'Executive Suite - Floor 5', checkInTime: null, badgeId: 'B111222', phone: '+1 (555) 678-9012' },
+      { id: '7', name: 'Edward Foster', department: 'Sales', status: 'Checked In', lastSeen: '10:50 AM', lastLocation: 'Parking Lot A', checkInTime: '10:50 AM', badgeId: 'B333444', phone: '+1 (555) 789-0123' },
+      { id: '8', name: 'Fiona Garcia', department: 'R&D', status: 'Marked Safe', lastSeen: '10:47 AM', lastLocation: 'Emergency Exit - Lab A', checkInTime: null, badgeId: 'B555666', phone: '+1 (555) 890-1234' },
+      { id: '9', name: 'George Harris', department: 'Marketing', status: 'Checked In', lastSeen: '10:51 AM', lastLocation: 'Parking Lot B', checkInTime: '10:51 AM', badgeId: 'B777888', phone: '+1 (555) 901-2345' },
+      { id: '10', name: 'Helen Irving', department: 'Legal', status: 'Checked Out', lastSeen: '09:45 AM', lastLocation: 'Conference Room 3B', checkInTime: null, badgeId: 'B999000', phone: '+1 (555) 012-3456' },
     ],
   },
   buildright: {
@@ -59,23 +59,23 @@ const musteringData: Record<string, { people: Person[]; musterPoints: MusterPoin
       { id: '3', name: 'Equipment Yard Gate', capacity: 30, current: 30, status: 'Full' },
     ],
     people: [
-      { id: '1', name: 'Mike Johnson', department: 'Site Management', status: 'Accounted', lastSeen: '06:18 AM', lastLocation: 'Site Office Shelter', checkInTime: '06:18 AM', badgeId: 'C123456', phone: '+1 (555) 111-2222' },
-      { id: '2', name: 'Tom Harris', department: 'Contractor - Electric', status: 'Missing', lastSeen: '06:10 AM', lastLocation: 'Tower Crane Area', checkInTime: null, badgeId: 'C789012', phone: '+1 (555) 222-3333' },
-      { id: '3', name: 'Steve Clark', department: 'Contractor - Electric', status: 'Accounted', lastSeen: '06:20 AM', lastLocation: 'Warehouse A Basement', checkInTime: '06:20 AM', badgeId: 'C345678', phone: '+1 (555) 333-4444' },
-      { id: '4', name: 'Lisa Martinez', department: 'Safety', status: 'Accounted', lastSeen: '06:16 AM', lastLocation: 'Site Office Shelter', checkInTime: '06:16 AM', badgeId: 'C901234', phone: '+1 (555) 444-5555' },
-      { id: '5', name: 'Robert Lee', department: 'Contractor - Concrete', status: 'En Route', lastSeen: '06:19 AM', lastLocation: 'Foundation Zone B', checkInTime: null, badgeId: 'C567890', phone: '+1 (555) 555-6666' },
+      { id: '1', name: 'Mike Johnson', department: 'Site Management', status: 'Checked In', lastSeen: '06:18 AM', lastLocation: 'Site Office Shelter', checkInTime: '06:18 AM', badgeId: 'C123456', phone: '+1 (555) 111-2222' },
+      { id: '2', name: 'Tom Harris', department: 'Contractor - Electric', status: 'Checked Out', lastSeen: '06:10 AM', lastLocation: 'Tower Crane Area', checkInTime: null, badgeId: 'C789012', phone: '+1 (555) 222-3333' },
+      { id: '3', name: 'Steve Clark', department: 'Contractor - Electric', status: 'Checked In', lastSeen: '06:20 AM', lastLocation: 'Warehouse A Basement', checkInTime: '06:20 AM', badgeId: 'C345678', phone: '+1 (555) 333-4444' },
+      { id: '4', name: 'Lisa Martinez', department: 'Safety', status: 'Checked In', lastSeen: '06:16 AM', lastLocation: 'Site Office Shelter', checkInTime: '06:16 AM', badgeId: 'C901234', phone: '+1 (555) 444-5555' },
+      { id: '5', name: 'Robert Lee', department: 'Contractor - Concrete', status: 'Marked Safe', lastSeen: '06:19 AM', lastLocation: 'Foundation Zone B', checkInTime: null, badgeId: 'C567890', phone: '+1 (555) 555-6666' },
     ],
   },
 };
 
-const statusStyles: Record<string, { bg: string; text: string; pulse?: boolean }> = {
-  'Accounted': { bg: 'bg-green-100', text: 'text-green-700' },
-  'Missing': { bg: 'bg-red-100', text: 'text-red-700', pulse: true },
-  'En Route': { bg: 'bg-yellow-100', text: 'text-yellow-700' },
+const statusStyles: Record<string, { bg: string; text: string; solidBg: string; pulse?: boolean }> = {
+  'Checked In': { bg: 'bg-green-500', text: 'text-white', solidBg: 'bg-green-500' },
+  'Checked Out': { bg: 'bg-red-500', text: 'text-white', solidBg: 'bg-red-500', pulse: true },
+  'Marked Safe': { bg: 'bg-blue-500', text: 'text-white', solidBg: 'bg-blue-500' },
 };
 
 export default function MusteringView({ tenant }: MusteringViewProps) {
-  const [filter, setFilter] = useState<'all' | 'missing' | 'enroute'>('all');
+  const [filter, setFilter] = useState<'all' | 'checkedout' | 'markedsafe'>('all');
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   
@@ -95,19 +95,19 @@ export default function MusteringView({ tenant }: MusteringViewProps) {
   };
 
   const filteredPeople = data.people.filter(p => {
-    if (filter === 'missing') return p.status === 'Missing';
-    if (filter === 'enroute') return p.status === 'En Route';
+    if (filter === 'checkedout') return p.status === 'Checked Out';
+    if (filter === 'markedsafe') return p.status === 'Marked Safe';
     return true;
   });
 
   const stats = {
     total: data.people.length,
-    accounted: data.people.filter(p => p.status === 'Accounted').length,
-    missing: data.people.filter(p => p.status === 'Missing').length,
-    enRoute: data.people.filter(p => p.status === 'En Route').length,
+    checkedIn: data.people.filter(p => p.status === 'Checked In').length,
+    checkedOut: data.people.filter(p => p.status === 'Checked Out').length,
+    markedSafe: data.people.filter(p => p.status === 'Marked Safe').length,
   };
 
-  const accountedPercentage = Math.round((stats.accounted / stats.total) * 100);
+  const safePercentage = Math.round(((stats.checkedIn + stats.markedSafe) / stats.total) * 100);
 
   return (
     <div className="space-y-6">
@@ -121,28 +121,28 @@ export default function MusteringView({ tenant }: MusteringViewProps) {
             </div>
           </div>
           <div className="text-right">
-            <div className="text-4xl font-bold">{accountedPercentage}%</div>
-            <div className="text-red-100">Personnel Accounted</div>
+            <div className="text-4xl font-bold">{safePercentage}%</div>
+            <div className="text-red-100">Personnel Safe</div>
           </div>
         </div>
       )}
 
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-200">
-          <div className="text-sm text-gray-600">Total On-Site</div>
-          <div className="text-3xl font-bold text-gray-900">{stats.total}</div>
+        <div className="bg-gray-700 rounded-lg shadow-lg p-4">
+          <div className="text-sm text-gray-300">Total On-Site</div>
+          <div className="text-3xl font-bold text-white">{stats.total}</div>
         </div>
-        <div className="bg-white rounded-lg shadow-lg p-4 border-2 border-green-500">
-          <div className="text-sm text-green-600">Accounted</div>
-          <div className="text-3xl font-bold text-green-600">{stats.accounted}</div>
+        <div className="bg-green-500 rounded-lg shadow-lg p-4">
+          <div className="text-sm text-green-100">Checked In</div>
+          <div className="text-3xl font-bold text-white">{stats.checkedIn}</div>
         </div>
-        <div className={`bg-white rounded-lg shadow-lg p-4 border-2 ${stats.missing > 0 ? 'border-red-500 animate-pulse' : 'border-gray-200'}`}>
-          <div className="text-sm text-red-600">Missing</div>
-          <div className="text-3xl font-bold text-red-600">{stats.missing}</div>
+        <div className={`bg-red-500 rounded-lg shadow-lg p-4 ${stats.checkedOut > 0 ? 'animate-pulse' : ''}`}>
+          <div className="text-sm text-red-100">Checked Out</div>
+          <div className="text-3xl font-bold text-white">{stats.checkedOut}</div>
         </div>
-        <div className="bg-white rounded-lg shadow-lg p-4 border-2 border-yellow-500">
-          <div className="text-sm text-yellow-600">En Route</div>
-          <div className="text-3xl font-bold text-yellow-600">{stats.enRoute}</div>
+        <div className="bg-blue-500 rounded-lg shadow-lg p-4">
+          <div className="text-sm text-blue-100">Marked Safe</div>
+          <div className="text-3xl font-bold text-white">{stats.markedSafe}</div>
         </div>
       </div>
 
@@ -158,16 +158,16 @@ export default function MusteringView({ tenant }: MusteringViewProps) {
                 All ({stats.total})
               </button>
               <button 
-                onClick={() => setFilter('missing')}
-                className={`px-3 py-1 text-xs rounded ${filter === 'missing' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                onClick={() => setFilter('checkedout')}
+                className={`px-3 py-1 text-xs rounded ${filter === 'checkedout' ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-700'}`}
               >
-                Missing ({stats.missing})
+                Checked Out ({stats.checkedOut})
               </button>
               <button 
-                onClick={() => setFilter('enroute')}
-                className={`px-3 py-1 text-xs rounded ${filter === 'enroute' ? 'bg-yellow-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+                onClick={() => setFilter('markedsafe')}
+                className={`px-3 py-1 text-xs rounded ${filter === 'markedsafe' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'}`}
               >
-                En Route ({stats.enRoute})
+                Marked Safe ({stats.markedSafe})
               </button>
             </div>
           </div>
@@ -188,7 +188,7 @@ export default function MusteringView({ tenant }: MusteringViewProps) {
                     key={person.id}
                     onClick={() => setSelectedPerson(person)}
                     className={`border-t border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors ${
-                      person.status === 'Missing' ? 'bg-red-50' : ''
+                      person.status === 'Checked Out' ? 'bg-red-50' : ''
                     }`}
                   >
                     <td className="px-4 py-2">
@@ -197,7 +197,7 @@ export default function MusteringView({ tenant }: MusteringViewProps) {
                     </td>
                     <td className="px-4 py-2">
                       <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${statusStyles[person.status].bg} ${statusStyles[person.status].text}`}>
-                        {person.status === 'Missing' && '⚠ '}{person.status}
+                        {person.status === 'Checked Out' && '⚠ '}{person.status}
                       </span>
                     </td>
                     <td className="px-4 py-2 text-gray-900">{person.lastLocation}</td>
@@ -244,13 +244,13 @@ export default function MusteringView({ tenant }: MusteringViewProps) {
             </div>
           </div>
 
-          {stats.missing > 0 && (
+          {stats.checkedOut > 0 && (
             <div className="bg-red-50 rounded-lg shadow-lg p-4 border-2 border-red-300">
               <h3 className="text-sm font-medium text-red-700 mb-3 flex items-center">
-                <span className="mr-2">🚨</span> Priority: Missing Personnel
+                <span className="mr-2">🚨</span> Priority: Checked Out Personnel
               </h3>
               <div className="space-y-2">
-                {data.people.filter(p => p.status === 'Missing').map((person) => (
+                {data.people.filter(p => p.status === 'Checked Out').map((person) => (
                   <div 
                     key={person.id} 
                     className="bg-white rounded p-2 border border-red-200 cursor-pointer hover:bg-red-100"
@@ -272,7 +272,7 @@ export default function MusteringView({ tenant }: MusteringViewProps) {
           <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setSelectedPerson(null)} />
           <div className="fixed inset-y-0 right-0 w-[400px] bg-white shadow-xl z-50 border-l border-gray-200 overflow-y-auto">
             <div className={`flex items-center justify-between p-4 border-b ${
-              selectedPerson.status === 'Missing' ? 'bg-red-50 border-red-200' : 'border-gray-200'
+              selectedPerson.status === 'Checked Out' ? 'bg-red-50 border-red-200' : 'border-gray-200'
             }`}>
               <h2 className="font-semibold text-gray-900">Personnel Details</h2>
               <button onClick={() => setSelectedPerson(null)} className="text-gray-500 hover:text-gray-700">X</button>
@@ -331,9 +331,9 @@ export default function MusteringView({ tenant }: MusteringViewProps) {
                 <button className="w-full px-3 py-2 bg-gray-100 rounded text-sm text-gray-900 hover:bg-gray-200 transition-colors">
                   📋 View Access History
                 </button>
-                {selectedPerson.status !== 'Accounted' && (
-                  <button className="w-full px-3 py-2 bg-green-600 text-white rounded text-sm font-medium hover:bg-green-700 transition-colors">
-                    ✓ Mark as Accounted
+                {selectedPerson.status !== 'Checked In' && (
+                  <button className="w-full px-3 py-2 bg-green-500 text-white rounded text-sm font-medium hover:bg-green-600 transition-colors">
+                    ✓ Mark as Checked In
                   </button>
                 )}
               </div>
