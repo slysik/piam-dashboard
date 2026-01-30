@@ -1,0 +1,256 @@
+# PIAM Dashboard Data Generation Configuration
+# This file defines tenants, sites, and generation parameters
+
+general:
+  history_days: 30
+  random_seed: 42
+  output_dir: "../clickhouse/data"
+
+tenants:
+  - id: acme
+    name: "Acme Corporation"
+    industry: "Professional Services"
+    employee_count: 400
+    contractor_count: 20
+    deny_rate: 0.025  # 2.5% deny rate
+    sites:
+      - id: acme-hq
+        name: "Acme Headquarters"
+        city: "San Francisco"
+        state: "CA"
+        country: "USA"
+        timezone: "America/Los_Angeles"
+        buildings:
+          - id: acme-hq-main
+            name: "Main Building"
+            floors:
+              - floor_number: 1
+                doors:
+                  - id: acme-hq-main-lobby
+                    name: "Main Lobby"
+                    door_type: "entrance"
+                    security_level: "low"
+                  - id: acme-hq-main-1a
+                    name: "Floor 1 Wing A"
+                    door_type: "interior"
+                    security_level: "medium"
+              - floor_number: 2
+                doors:
+                  - id: acme-hq-main-2a
+                    name: "Floor 2 Wing A"
+                    door_type: "interior"
+                    security_level: "medium"
+                  - id: acme-hq-main-2b
+                    name: "Floor 2 Wing B"
+                    door_type: "interior"
+                    security_level: "medium"
+              - floor_number: 3
+                doors:
+                  - id: acme-hq-main-exec
+                    name: "Executive Suite"
+                    door_type: "interior"
+                    security_level: "high"
+                  - id: acme-hq-main-server
+                    name: "Server Room"
+                    door_type: "interior"
+                    security_level: "critical"
+            connectors:
+              - id: acme-hq-main-conn1
+                name: "Main Building Connector 1"
+                type: "lenel"
+                profile: "stable"  # stable, degraded, flaky
+              - id: acme-hq-main-conn2
+                name: "Main Building Connector 2"
+                type: "lenel"
+                profile: "stable"
+      - id: acme-east
+        name: "Acme East Office"
+        city: "New York"
+        state: "NY"
+        country: "USA"
+        timezone: "America/New_York"
+        buildings:
+          - id: acme-east-tower
+            name: "East Tower"
+            floors:
+              - floor_number: 1
+                doors:
+                  - id: acme-east-tower-lobby
+                    name: "Tower Lobby"
+                    door_type: "entrance"
+                    security_level: "low"
+                  - id: acme-east-tower-1a
+                    name: "Floor 1 Office"
+                    door_type: "interior"
+                    security_level: "medium"
+              - floor_number: 2
+                doors:
+                  - id: acme-east-tower-2a
+                    name: "Floor 2 Office"
+                    door_type: "interior"
+                    security_level: "medium"
+            connectors:
+              - id: acme-east-tower-conn1
+                name: "East Tower Connector"
+                type: "genetec"
+                profile: "stable"
+    departments:
+      - id: acme-eng
+        name: "Engineering"
+        headcount_pct: 0.35
+      - id: acme-sales
+        name: "Sales"
+        headcount_pct: 0.25
+      - id: acme-hr
+        name: "Human Resources"
+        headcount_pct: 0.10
+      - id: acme-finance
+        name: "Finance"
+        headcount_pct: 0.15
+      - id: acme-ops
+        name: "Operations"
+        headcount_pct: 0.15
+
+  - id: buildright
+    name: "BuildRight Construction"
+    industry: "Construction"
+    employee_count: 300
+    contractor_count: 150
+    deny_rate: 0.08  # 8% deny rate (higher due to contractor churn)
+    sites:
+      - id: buildright-hq
+        name: "BuildRight Headquarters"
+        city: "Denver"
+        state: "CO"
+        country: "USA"
+        timezone: "America/Denver"
+        buildings:
+          - id: buildright-hq-admin
+            name: "Admin Building"
+            floors:
+              - floor_number: 1
+                doors:
+                  - id: buildright-hq-admin-lobby
+                    name: "Admin Lobby"
+                    door_type: "entrance"
+                    security_level: "low"
+                  - id: buildright-hq-admin-1a
+                    name: "Admin Floor 1"
+                    door_type: "interior"
+                    security_level: "medium"
+              - floor_number: 2
+                doors:
+                  - id: buildright-hq-admin-exec
+                    name: "Executive Offices"
+                    door_type: "interior"
+                    security_level: "high"
+            connectors:
+              - id: buildright-hq-admin-conn1
+                name: "Admin Connector"
+                type: "ccure"
+                profile: "stable"
+          - id: buildright-hq-warehouse
+            name: "Equipment Warehouse"
+            floors:
+              - floor_number: 1
+                doors:
+                  - id: buildright-hq-warehouse-main
+                    name: "Warehouse Main Entry"
+                    door_type: "entrance"
+                    security_level: "low"
+                  - id: buildright-hq-warehouse-secure
+                    name: "Secure Storage"
+                    door_type: "interior"
+                    security_level: "high"
+            connectors:
+              - id: buildright-hq-warehouse-conn1
+                name: "Warehouse Connector"
+                type: "ccure"
+                profile: "degraded"
+      - id: buildright-site1
+        name: "BuildRight Job Site Alpha"
+        city: "Boulder"
+        state: "CO"
+        country: "USA"
+        timezone: "America/Denver"
+        buildings:
+          - id: buildright-site1-trailer
+            name: "Site Office Trailer"
+            floors:
+              - floor_number: 1
+                doors:
+                  - id: buildright-site1-trailer-entry
+                    name: "Trailer Entry"
+                    door_type: "entrance"
+                    security_level: "low"
+                  - id: buildright-site1-gate
+                    name: "Site Gate"
+                    door_type: "gate"
+                    security_level: "low"
+            connectors:
+              - id: buildright-site1-conn1
+                name: "Site Alpha Connector"
+                type: "amag"
+                profile: "flaky"
+    departments:
+      - id: buildright-mgmt
+        name: "Management"
+        headcount_pct: 0.10
+      - id: buildright-pm
+        name: "Project Management"
+        headcount_pct: 0.15
+      - id: buildright-field
+        name: "Field Operations"
+        headcount_pct: 0.50
+      - id: buildright-safety
+        name: "Safety"
+        headcount_pct: 0.10
+      - id: buildright-admin
+        name: "Administration"
+        headcount_pct: 0.15
+
+deny_reasons:
+  - code: "EXPIRED_BADGE"
+    description: "Badge has expired"
+    weight: 0.25
+  - code: "NO_ACCESS"
+    description: "No access rights for this door"
+    weight: 0.30
+  - code: "INVALID_TIME"
+    description: "Access attempted outside allowed hours"
+    weight: 0.20
+  - code: "BADGE_SUSPENDED"
+    description: "Badge has been suspended"
+    weight: 0.10
+  - code: "TAILGATE_DETECT"
+    description: "Tailgating detected"
+    weight: 0.08
+  - code: "ANTIPASSBACK"
+    description: "Anti-passback violation"
+    weight: 0.07
+
+compliance_requirements:
+  - id: "SOC2-AC1"
+    name: "Access Control Policy"
+    description: "Access control policies must be documented and enforced"
+    category: "SOC2"
+  - id: "SOC2-AC2"
+    name: "User Access Reviews"
+    description: "User access must be reviewed quarterly"
+    category: "SOC2"
+  - id: "HIPAA-164.312a"
+    name: "Unique User Identification"
+    description: "Assign unique identifiers for tracking user identity"
+    category: "HIPAA"
+  - id: "HIPAA-164.312d"
+    name: "Person or Entity Authentication"
+    description: "Implement procedures to verify identity"
+    category: "HIPAA"
+  - id: "PCI-9.1"
+    name: "Physical Access Controls"
+    description: "Limit physical access to cardholder data"
+    category: "PCI-DSS"
+  - id: "PCI-9.2"
+    name: "Access Control Systems"
+    description: "Develop procedures for identifying and authorizing access"
+    category: "PCI-DSS"
