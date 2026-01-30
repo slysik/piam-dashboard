@@ -14,7 +14,7 @@ help: ## Show this help
 up: ## Start all services (first run: ~60-90s for Superset init)
 	@echo "Starting PIAM Demo..."
 	@echo "Note: First run takes 60-90s while Superset initializes"
-	docker-compose up -d
+	docker compose up -d
 	@echo "Waiting for services to be ready..."
 	@sleep 15
 	@$(MAKE) health --no-print-directory
@@ -26,11 +26,11 @@ up: ## Start all services (first run: ~60-90s for Superset init)
 	@echo "If Superset shows 'starting', wait ~60s and refresh."
 
 down: ## Stop all services
-	docker-compose down
+	docker compose down
 
 reset: down clean ## Full reset: stop, clean, restart, regenerate data
 	@echo "⚠️  This will wipe all dashboards and data. Run 'make dashboards-export' first to backup!"
-	docker-compose down -v
+	docker compose down -v
 	$(MAKE) up
 	@echo "Waiting for schema initialization..."
 	@sleep 10
@@ -39,10 +39,10 @@ reset: down clean ## Full reset: stop, clean, restart, regenerate data
 	@echo "✅ Reset complete! Run 'make dashboards-import' to restore dashboards."
 
 clean-volumes: ## Remove Docker volumes (alternative to reset)
-	docker-compose down -v
+	docker compose down -v
 
 logs: ## Tail service logs
-	docker-compose logs -f
+	docker compose logs -f
 
 health: ## Check service health
 	@./scripts/health-check.sh
@@ -70,24 +70,24 @@ shell-superset: ## Open Superset container shell
 
 generate: ## Generate synthetic data and load into ClickHouse
 	@echo "Generating synthetic data..."
-	@cd datagen && pip install -q -r requirements.txt && python generate.py --days 30
+	@cd datagen && python3 -m pip install -q -r requirements.txt && python3 generate.py --days 30
 	@echo ""
 	@echo "Loading data into ClickHouse..."
 	@./scripts/load-data.sh
 	@echo ""
 	@echo "Computing baselines..."
-	@docker exec -i piam-clickhouse clickhouse-client --database=piam < clickhouse/init/03_baselines.sql
+	@docker exec -i piam-clickhouse clickhouse-client --multiquery < clickhouse/init/03_baselines.sql
 	@echo ""
 	@echo "✅ Data generation complete!"
 	@echo "   Run 'make trickle' to start live event stream"
 
 trickle: ## Start live event trickle (Ctrl+C to stop)
 	@echo "Starting live event stream..."
-	@cd datagen && python trickle.py --interval 5 --events-per-batch 3
+	@cd datagen && python3 trickle_simple.py --interval 5 --events-per-batch 5 --deny-rate 0.25
 
 replay: ## Load incident replay window (guaranteed incidents)
 	@echo "Loading incident replay window..."
-	@cd datagen && python replay.py
+	@cd datagen && python3 replay.py
 	@echo "✅ Replay loaded. Filter dashboards to last 30 minutes."
 
 clean: ## Remove generated data files
@@ -101,9 +101,9 @@ clean: ## Remove generated data files
 
 ddl-apply: ## Apply schema DDL without reset (use after adding files)
 	@echo "Applying schema DDL..."
-	@docker exec -i piam-clickhouse clickhouse-client --database=piam < clickhouse/init/01_schema.sql
-	@docker exec -i piam-clickhouse clickhouse-client --database=piam < clickhouse/init/02_rollups.sql
-	@docker exec -i piam-clickhouse clickhouse-client --database=piam < clickhouse/init/03_baselines.sql
+	@docker exec -i piam-clickhouse clickhouse-client --multiquery < clickhouse/init/01_schema.sql
+	@docker exec -i piam-clickhouse clickhouse-client --multiquery < clickhouse/init/02_rollups.sql
+	@docker exec -i piam-clickhouse clickhouse-client --multiquery < clickhouse/init/03_baselines.sql
 	@echo "✅ DDL applied"
 
 verify: ## Quick pre-demo verification of services and data
@@ -125,8 +125,10 @@ quickstart: ## Full setup: start services, generate data, verify
 	@echo "=== PIAM Demo Quickstart ==="
 	$(MAKE) up
 	@echo ""
-	@echo "Waiting for schema initialization..."
-	@sleep 10
+	@echo "Ensuring DDL is applied..."
+	@sleep 5
+	$(MAKE) ddl-apply
+	@echo ""
 	$(MAKE) generate
 	@echo ""
 	$(MAKE) verify

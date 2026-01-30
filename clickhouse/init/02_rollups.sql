@@ -31,8 +31,8 @@ AS SELECT
     location_id,
     toStartOfMinute(event_time) AS minute,
     count() AS total_events,
-    countIf(result = 'GRANT') AS grants,
-    countIf(result = 'DENY') AS denies,
+    countIf(result IN ('grant', 'granted')) AS grants,
+    countIf(result IN ('deny', 'denied')) AS denies,
     countIf(suspicious_flag = 1) AS suspicious,
     uniqState(badge_id) AS unique_badges,
     uniqState(person_id) AS unique_persons
@@ -63,10 +63,10 @@ AS SELECT
     location_id,
     toStartOfHour(event_time) AS hour,
     count() AS total_events,
-    countIf(result = 'GRANT') AS grants,
-    countIf(result = 'DENY') AS denies,
+    countIf(result IN ('grant', 'granted')) AS grants,
+    countIf(result IN ('deny', 'denied')) AS denies,
     countIf(suspicious_flag = 1) AS suspicious,
-    if(count() > 0, countIf(result = 'DENY') * 100.0 / count(), 0) AS deny_rate
+    if(count() > 0, countIf(result IN ('deny', 'denied')) * 100.0 / count(), 0) AS deny_rate
 FROM piam.fact_access_events
 GROUP BY tenant_id, site_id, location_id, hour;
 
@@ -97,21 +97,22 @@ ORDER BY (tenant_id, site_id, location_id, hour_of_week);
 -- =============================================================================
 
 -- Current KPIs (15m, 60m, 24h)
+-- Note: result values are lowercase ('grant', 'deny') with some 'granted', 'denied' variants
 CREATE OR REPLACE VIEW piam.v_kpi_current AS
 SELECT
     tenant_id,
     countIf(event_time > now() - INTERVAL 15 MINUTE) AS events_15m,
-    countIf(event_time > now() - INTERVAL 15 MINUTE AND result = 'GRANT') AS grants_15m,
-    countIf(event_time > now() - INTERVAL 15 MINUTE AND result = 'DENY') AS denies_15m,
+    countIf(event_time > now() - INTERVAL 15 MINUTE AND result IN ('grant', 'granted')) AS grants_15m,
+    countIf(event_time > now() - INTERVAL 15 MINUTE AND result IN ('deny', 'denied')) AS denies_15m,
     round(if(countIf(event_time > now() - INTERVAL 15 MINUTE) > 0,
-       countIf(event_time > now() - INTERVAL 15 MINUTE AND result = 'DENY') * 100.0 /
+       countIf(event_time > now() - INTERVAL 15 MINUTE AND result IN ('deny', 'denied')) * 100.0 /
        countIf(event_time > now() - INTERVAL 15 MINUTE), 0), 1) AS deny_rate_15m,
     countIf(event_time > now() - INTERVAL 15 MINUTE AND suspicious_flag = 1) AS suspicious_15m,
     countIf(event_time > now() - INTERVAL 60 MINUTE) AS events_60m,
-    countIf(event_time > now() - INTERVAL 60 MINUTE AND result = 'DENY') AS denies_60m,
+    countIf(event_time > now() - INTERVAL 60 MINUTE AND result IN ('deny', 'denied')) AS denies_60m,
     countIf(event_time > now() - INTERVAL 60 MINUTE AND suspicious_flag = 1) AS suspicious_60m,
     countIf(event_time > now() - INTERVAL 24 HOUR) AS events_24h,
-    countIf(event_time > now() - INTERVAL 24 HOUR AND result = 'DENY') AS denies_24h
+    countIf(event_time > now() - INTERVAL 24 HOUR AND result IN ('deny', 'denied')) AS denies_24h
 FROM piam.fact_access_events
 WHERE event_time > now() - INTERVAL 24 HOUR
 GROUP BY tenant_id;
@@ -122,8 +123,8 @@ SELECT
     tenant_id,
     toStartOfMinute(event_time) AS minute,
     count() AS total_events,
-    countIf(result = 'GRANT') AS grants,
-    countIf(result = 'DENY') AS denies,
+    countIf(result IN ('grant', 'granted')) AS grants,
+    countIf(result IN ('deny', 'denied')) AS denies,
     countIf(suspicious_flag = 1) AS suspicious
 FROM piam.fact_access_events
 WHERE event_time > now() - INTERVAL 60 MINUTE
@@ -145,9 +146,9 @@ SELECT
     l.lon,
     l.is_high_risk,
     count() AS total_events,
-    countIf(e.result = 'GRANT') AS grants,
-    countIf(e.result = 'DENY') AS denies,
-    round(if(count() > 0, countIf(e.result = 'DENY') * 100.0 / count(), 0), 1) AS deny_rate_pct,
+    countIf(e.result IN ('grant', 'granted')) AS grants,
+    countIf(e.result IN ('deny', 'denied')) AS denies,
+    round(if(count() > 0, countIf(e.result IN ('deny', 'denied')) * 100.0 / count(), 0), 1) AS deny_rate_pct,
     countIf(e.suspicious_flag = 1) AS suspicious
 FROM piam.fact_access_events e
 INNER JOIN piam.dim_location l ON e.location_id = l.location_id AND e.tenant_id = l.tenant_id
@@ -201,33 +202,33 @@ INNER JOIN piam.dim_person p ON c.person_id = p.person_id AND c.tenant_id = p.te
 -- Recent events (joined)
 CREATE OR REPLACE VIEW piam.v_recent_events AS
 SELECT
-    e.event_id,
-    e.tenant_id,
-    e.event_time,
-    e.badge_id,
-    e.person_id,
+    e.event_id AS event_id,
+    e.tenant_id AS tenant_id,
+    e.event_time AS event_time,
+    e.badge_id AS badge_id,
+    e.person_id AS person_id,
     coalesce(p.first_name, 'Unknown') AS first_name,
     coalesce(p.last_name, 'Badge') AS last_name,
     concat(coalesce(p.first_name, 'Unknown'), ' ', coalesce(p.last_name, e.badge_id)) AS person_name,
     coalesce(p.department, '') AS department,
     coalesce(p.person_type, 'UNKNOWN') AS person_type,
-    p.is_contractor,
-    p.contractor_company,
-    e.site_id,
-    s.site_name,
-    e.location_id,
-    l.location_name,
-    l.building,
-    l.floor,
-    l.zone,
-    e.direction,
-    e.result,
-    e.event_type,
-    e.deny_reason,
-    e.pacs_source,
-    e.suspicious_flag,
-    e.suspicious_reason,
-    e.raw_payload
+    p.is_contractor AS is_contractor,
+    p.contractor_company AS contractor_company,
+    e.site_id AS site_id,
+    s.site_name AS site_name,
+    e.location_id AS location_id,
+    l.location_name AS location_name,
+    l.building AS building,
+    l.floor AS floor,
+    l.zone AS zone,
+    e.direction AS direction,
+    e.result AS result,
+    e.event_type AS event_type,
+    e.deny_reason AS deny_reason,
+    e.pacs_source AS pacs_source,
+    e.suspicious_flag AS suspicious_flag,
+    e.suspicious_reason AS suspicious_reason,
+    e.raw_payload AS raw_payload
 FROM piam.fact_access_events e
 LEFT JOIN piam.dim_person p ON e.person_id = p.person_id AND e.tenant_id = p.tenant_id
 LEFT JOIN piam.dim_site s ON e.site_id = s.site_id AND e.tenant_id = s.tenant_id
@@ -277,8 +278,8 @@ SELECT
     c.current_denies,
     coalesce(b.avg_denies_per_hour, 0) AS baseline_denies,
     if(coalesce(b.avg_denies_per_hour, 0) > 0,
-       round(c.current_denies / b.avg_denies_per_hour, 1),
-       c.current_denies) AS spike_ratio,
+       round(toFloat64(c.current_denies) / b.avg_denies_per_hour, 1),
+       toFloat64(c.current_denies)) AS spike_ratio,
     'DENY_SPIKE' AS insight_type
 FROM current_data c
 LEFT JOIN baseline b ON c.tenant_id = b.tenant_id AND c.location_id = b.location_id

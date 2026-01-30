@@ -5,6 +5,7 @@ PIAM Dashboard - Trickle Data Generator
 Continuously generates and inserts realistic access events into ClickHouse
 to simulate live data streaming.
 """
+from __future__ import annotations
 
 import argparse
 import random
