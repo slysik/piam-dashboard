@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+
 interface Alert {
   id: string;
   severity: 'critical' | 'high' | 'medium' | 'low';
@@ -48,6 +50,25 @@ function formatTimeAgo(date: Date): string {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
+function TimeAgo({ date }: { date: Date }) {
+  const [timeAgo, setTimeAgo] = useState('');
+
+  useEffect(() => {
+    const update = () => {
+      const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
+      if (seconds < 60) setTimeAgo(`${seconds}s ago`);
+      else if (seconds < 3600) setTimeAgo(`${Math.floor(seconds / 60)}m ago`);
+      else if (seconds < 86400) setTimeAgo(`${Math.floor(seconds / 3600)}h ago`);
+      else setTimeAgo(`${Math.floor(seconds / 86400)}d ago`);
+    };
+    update();
+    const interval = setInterval(update, 60000);
+    return () => clearInterval(interval);
+  }, [date]);
+
+  return <>{timeAgo}</>;
+}
+
 export default function AlertsPanel({ alerts }: AlertsPanelProps) {
   return (
     <div className="bg-anthropic-surface rounded-lg shadow-lg p-4 border border-anthropic-surface-light">
@@ -75,7 +96,7 @@ export default function AlertsPanel({ alerts }: AlertsPanelProps) {
                   </div>
                 </div>
                 <span className="text-xs text-anthropic-text-muted whitespace-nowrap">
-                  {formatTimeAgo(alert.timestamp)}
+                  <TimeAgo date={alert.timestamp} />
                 </span>
               </div>
             </div>
