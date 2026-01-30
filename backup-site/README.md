@@ -1,4 +1,4 @@
-# CloudGate PIAM Dashboard
+# Identity & Access Analytics
 
 A next-generation **Physical Identity and Access Management** analytics platform designed for enterprise security operations centers. Built to unify multi-PACS environments, provide real-time threat detection, and streamline compliance workflows.
 
@@ -11,7 +11,7 @@ A next-generation **Physical Identity and Access Management** analytics platform
 
 ## Overview
 
-CloudGate PIAM transforms fragmented physical access control systems into a unified security intelligence platform. Whether you're managing a single corporate campus or hundreds of construction sites, CloudGate provides the visibility, governance, and compliance tools you need.
+This platform transforms fragmented physical access control systems into a unified security intelligence platform. Whether you're managing a single corporate campus or hundreds of construction sites, it provides the visibility, governance, and compliance tools you need.
 
 ### Key Capabilities
 
@@ -31,7 +31,7 @@ CloudGate PIAM transforms fragmented physical access control systems into a unif
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                      CloudGate PIAM Platform                     │
+│                 Identity & Access Analytics Platform              │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
 │  │   Lenel     │  │   C-CURE    │  │     S2      │   ...        │
@@ -162,5 +162,5 @@ MIT License - See LICENSE file for details.
 ---
 
 <p align="center">
-  <strong>CloudGate PIAM</strong> - Unified Physical Security Intelligence
+  <strong>Identity & Access Analytics</strong> - Unified Physical Security Intelligence
 </p>

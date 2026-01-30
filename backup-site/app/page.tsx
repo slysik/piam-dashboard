@@ -109,11 +109,11 @@ export default function Dashboard() {
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">CG</span>
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">IA</span>
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">CloudGate PIAM</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Identity & Access Analytics</h1>
               <p className="text-xs text-gray-500">Physical Identity & Access Management</p>
             </div>
           </div>

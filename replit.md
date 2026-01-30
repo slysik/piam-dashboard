@@ -1,4 +1,4 @@
-# CloudGate PIAM Dashboard Demo
+# Identity & Access Analytics Dashboard
 
 ## Overview
 A multi-tenant Physical Identity and Access Management (PIAM) analytics dashboard for demonstrating real-time credential and access event visualization. Built for a 15-minute demo showcasing multi-PACS operations, governance, compliance, and mustering capabilities.
