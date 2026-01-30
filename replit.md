@@ -9,6 +9,7 @@ A multi-tenant Physical Identity and Access Management (PIAM) analytics dashboar
 3. **Governance** - Who has access, why (policy/manual/exception), who approved, expiry/last used
 4. **Compliance** - Contractor/company audit with export capability and evidence links
 5. **Mustering** - Accounted vs missing personnel + last-seen location during emergencies
+6. **(Optional) AI Builder** - "Create a PIAM dashboard" GenAI moment - watch AI build a dashboard live
 
 ## Project Structure
 ```
@@ -66,6 +67,13 @@ The dashboard runs via the "PIAM Dashboard" workflow on port 5000.
 - Muster point capacity tracking
 - Priority missing personnel list
 - One-click call and location view
+
+### AI Builder (GenAI Demo)
+- Natural language dashboard generation
+- Real-time streaming AI response with progress phases
+- Auto-generates KPIs, charts, tables, and alert rules
+- Example prompts for quick demos
+- Uses Replit AI Integrations (no API key required)
 
 ## Demo Tenants
 - **Acme Corporate** - Office complex scenario

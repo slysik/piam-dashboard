@@ -13,6 +13,7 @@ import ConnectorHealth from '@/components/ConnectorHealth';
 import GovernanceView from '@/components/GovernanceView';
 import ComplianceView from '@/components/ComplianceView';
 import MusteringView from '@/components/MusteringView';
+import GenAIView from '@/components/GenAIView';
 
 const sampleKPIs = {
   acme: {
@@ -189,6 +190,10 @@ export default function Dashboard() {
 
         {activeTab === 'mustering' && (
           <MusteringView tenant={tenant} />
+        )}
+
+        {activeTab === 'genai' && (
+          <GenAIView />
         )}
       </main>
 

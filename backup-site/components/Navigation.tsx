@@ -10,6 +10,7 @@ const tabs = [
   { id: 'governance', label: 'Governance', icon: '🔐' },
   { id: 'compliance', label: 'Compliance', icon: '📋' },
   { id: 'mustering', label: 'Mustering', icon: '👥' },
+  { id: 'genai', label: 'AI Builder', icon: '✨' },
 ];
 
 export default function Navigation({ activeTab, onTabChange }: NavigationProps) {
