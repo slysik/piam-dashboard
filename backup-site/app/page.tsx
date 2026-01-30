@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Navigation from '@/components/Navigation';
 import KPICard from '@/components/KPICard';
 import TimeSeriesChart from '@/components/TimeSeriesChart';
 import MapView from '@/components/MapView';
@@ -9,9 +10,10 @@ import TenantSelector from '@/components/TenantSelector';
 import EventsTable from '@/components/EventsTable';
 import EvidenceDrawer from '@/components/EvidenceDrawer';
 import ConnectorHealth from '@/components/ConnectorHealth';
-import { useClickHouse } from '@/hooks/useClickHouse';
+import GovernanceView from '@/components/GovernanceView';
+import ComplianceView from '@/components/ComplianceView';
+import MusteringView from '@/components/MusteringView';
 
-// Sample data for demo/fallback
 const sampleKPIs = {
   acme: {
     eventsToday: 12847,
@@ -46,21 +48,21 @@ const sampleAlerts = {
 
 const sampleEvents = {
   acme: [
-    { id: '1', time: '10:55:23', person: 'John Smith', door: 'Main Tower F1 D1', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'B123456' }, result: { granted: true } } },
-    { id: '2', time: '10:55:18', person: 'Jane Doe', door: 'Main Tower F2 D3', result: 'DENY' as const, suspicious: true, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'B789012' }, result: { granted: false, reason: 'ACCESS_NOT_GRANTED' } } },
-    { id: '3', time: '10:55:12', person: 'Bob Wilson', door: 'Parking Garage D1', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'B345678' }, result: { granted: true } } },
-    { id: '4', time: '10:55:08', person: 'Alice Brown', door: 'Main Tower F3 D2', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'B901234' }, result: { granted: true } } },
-    { id: '5', time: '10:55:01', person: 'Charlie Davis', door: 'Main Tower F1 D2', result: 'DENY' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'B567890' }, result: { granted: false, reason: 'EXPIRED_CREDENTIAL' } } },
-    { id: '6', time: '10:54:55', person: 'Diana Evans', door: 'Server Room D1', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'B111222' }, result: { granted: true } } },
-    { id: '7', time: '10:54:48', person: 'Edward Foster', door: 'Main Lobby D1', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'B333444' }, result: { granted: true } } },
-    { id: '8', time: '10:54:42', person: 'Fiona Garcia', door: 'Parking Garage D2', result: 'DENY' as const, suspicious: true, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'B555666' }, result: { granted: false, reason: 'TAILGATING_DETECTED' } } },
+    { id: '1', time: '10:55:23', person: 'John Smith', door: 'Main Tower F1 D1', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'Lenel OnGuard', badge: { id: 'B123456', facilityCode: '1001', format: 'H10301' }, door: { id: 'D-MT-F1-01', name: 'Main Tower F1 D1', readerSerial: 'LNL-RDR-2847' }, result: { granted: true, grantReason: 'VALID_CREDENTIAL' }, timestamp: '2024-10-15T10:55:23.456Z', rawHex: '0x4A6F686E20536D697468' } },
+    { id: '2', time: '10:55:18', person: 'Jane Doe', door: 'Main Tower F2 D3', result: 'DENY' as const, suspicious: true, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'Lenel OnGuard', badge: { id: 'B789012', facilityCode: '1001', format: 'H10301' }, door: { id: 'D-MT-F2-03', name: 'Main Tower F2 D3', readerSerial: 'LNL-RDR-2849' }, result: { granted: false, denyReason: 'ACCESS_NOT_GRANTED', denyCode: 'E-1042' }, timestamp: '2024-10-15T10:55:18.234Z' } },
+    { id: '3', time: '10:55:12', person: 'Bob Wilson', door: 'Parking Garage D1', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'C-CURE 9000', badge: { id: 'B345678', cardNumber: '345678' }, door: { id: 'PG-D1', name: 'Parking Garage D1' }, result: { granted: true }, timestamp: '2024-10-15T10:55:12.789Z' } },
+    { id: '4', time: '10:55:08', person: 'Alice Brown', door: 'Main Tower F3 D2', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'Lenel OnGuard', badge: { id: 'B901234' }, door: { id: 'D-MT-F3-02', name: 'Main Tower F3 D2' }, result: { granted: true }, timestamp: '2024-10-15T10:55:08.123Z' } },
+    { id: '5', time: '10:55:01', person: 'Charlie Davis', door: 'Main Tower F1 D2', result: 'DENY' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'Lenel OnGuard', badge: { id: 'B567890', status: 'EXPIRED' }, door: { id: 'D-MT-F1-02', name: 'Main Tower F1 D2' }, result: { granted: false, denyReason: 'EXPIRED_CREDENTIAL', expiryDate: '2024-09-30' }, timestamp: '2024-10-15T10:55:01.456Z' } },
+    { id: '6', time: '10:54:55', person: 'Diana Evans', door: 'Server Room D1', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'S2 NetBox', badge: { id: 'B111222', clearanceLevel: 'L4' }, door: { id: 'SR-D1', name: 'Server Room D1', securityLevel: 'HIGH' }, result: { granted: true, multiFactorUsed: true }, timestamp: '2024-10-15T10:54:55.789Z' } },
+    { id: '7', time: '10:54:48', person: 'Edward Foster', door: 'Main Lobby D1', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'Genetec Synergis', badge: { id: 'B333444' }, door: { id: 'ML-D1', name: 'Main Lobby D1' }, result: { granted: true }, timestamp: '2024-10-15T10:54:48.234Z' } },
+    { id: '8', time: '10:54:42', person: 'Fiona Garcia', door: 'Parking Garage D2', result: 'DENY' as const, suspicious: true, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'C-CURE 9000', badge: { id: 'B555666' }, door: { id: 'PG-D2', name: 'Parking Garage D2' }, result: { granted: false, denyReason: 'TAILGATING_DETECTED', sensorData: { antiPassback: true, tailgateScore: 0.92 } }, timestamp: '2024-10-15T10:54:42.567Z' } },
   ],
   buildright: [
-    { id: '1', time: '06:23:45', person: 'Mike Johnson', door: 'Site Entrance D1', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'C123456' }, result: { granted: true } } },
-    { id: '2', time: '06:23:41', person: 'Tom Harris', door: 'Equipment Yard D1', result: 'DENY' as const, suspicious: true, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'C789012' }, result: { granted: false, reason: 'SCHEDULE_VIOLATION' } } },
-    { id: '3', time: '06:23:38', person: 'Steve Clark', door: 'Warehouse A D2', result: 'DENY' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'C345678' }, result: { granted: false, reason: 'EXPIRED_CREDENTIAL' } } },
-    { id: '4', time: '06:23:32', person: 'Lisa Martinez', door: 'Site Office D1', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'C901234' }, result: { granted: true } } },
-    { id: '5', time: '06:23:25', person: 'Robert Lee', door: 'Equipment Yard D2', result: 'DENY' as const, suspicious: true, rawPayload: { eventType: 'ACCESS_ATTEMPT', badge: { id: 'C567890' }, result: { granted: false, reason: 'INVALID_CREDENTIAL' } } },
+    { id: '1', time: '06:23:45', person: 'Mike Johnson', door: 'Site Entrance D1', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'Lenel OnGuard', badge: { id: 'C123456', type: 'CONTRACTOR' }, door: { id: 'SE-D1', name: 'Site Entrance D1' }, result: { granted: true }, timestamp: '2024-10-15T06:23:45.123Z' } },
+    { id: '2', time: '06:23:41', person: 'Tom Harris', door: 'Equipment Yard D1', result: 'DENY' as const, suspicious: true, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'Genetec Synergis', badge: { id: 'C789012', type: 'CONTRACTOR', company: 'Reliable Electric' }, door: { id: 'EY-D1', name: 'Equipment Yard D1' }, result: { granted: false, denyReason: 'SCHEDULE_VIOLATION', scheduledHours: '07:00-18:00', attemptTime: '06:23' }, timestamp: '2024-10-15T06:23:41.456Z' } },
+    { id: '3', time: '06:23:38', person: 'Steve Clark', door: 'Warehouse A D2', result: 'DENY' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'HID Aero', badge: { id: 'C345678', status: 'EXPIRED' }, door: { id: 'WA-D2', name: 'Warehouse A D2' }, result: { granted: false, denyReason: 'EXPIRED_CREDENTIAL' }, timestamp: '2024-10-15T06:23:38.789Z' } },
+    { id: '4', time: '06:23:32', person: 'Lisa Martinez', door: 'Site Office D1', result: 'GRANT' as const, suspicious: false, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'Lenel OnGuard', badge: { id: 'C901234', role: 'SAFETY_OFFICER' }, door: { id: 'SO-D1', name: 'Site Office D1' }, result: { granted: true }, timestamp: '2024-10-15T06:23:32.234Z' } },
+    { id: '5', time: '06:23:25', person: 'Robert Lee', door: 'Equipment Yard D2', result: 'DENY' as const, suspicious: true, rawPayload: { eventType: 'ACCESS_ATTEMPT', sourceSystem: 'Verkada', badge: { id: 'C567890', status: 'INVALID' }, door: { id: 'EY-D2', name: 'Equipment Yard D2' }, result: { granted: false, denyReason: 'INVALID_CREDENTIAL', errorCode: 'VRK-401' }, timestamp: '2024-10-15T06:23:25.567Z' } },
   ],
 };
 
@@ -75,15 +77,14 @@ export interface Event {
 }
 
 export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState('command');
   const [tenant, setTenant] = useState<'acme' | 'buildright'>('acme');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [dataAge, setDataAge] = useState(12);
 
-  // Simulate data freshness updates
   useEffect(() => {
     const interval = setInterval(() => {
       setDataAge((prev) => {
-        // Reset to a small value randomly to simulate fresh data
         if (prev > 25) {
           return Math.floor(Math.random() * 5) + 1;
         }
@@ -97,15 +98,23 @@ export default function Dashboard() {
   const alerts = sampleAlerts[tenant];
   const events = sampleEvents[tenant];
 
+  const tenantNames: Record<string, string> = {
+    acme: 'Acme Corporate',
+    buildright: 'BuildRight Construction',
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-semibold text-gray-900">PIAM Analytics</h1>
-            <span className="text-gray-500">|</span>
-            <span className="text-gray-500">Command Center</span>
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-red-700 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">CG</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900">CloudGate PIAM</h1>
+              <p className="text-xs text-gray-500">Physical Identity & Access Management</p>
+            </div>
           </div>
           <div className="flex items-center space-x-4">
             <TenantSelector value={tenant} onChange={setTenant} />
@@ -117,60 +126,72 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {/* KPI Row */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <KPICard
-            label="Events Today"
-            value={kpis.eventsToday.toLocaleString()}
-            trend={{ value: '+12%', direction: 'neutral' }}
-          />
-          <KPICard
-            label="Deny Rate"
-            value={`${kpis.denyRate}%`}
-            trend={{ value: tenant === 'acme' ? '+0.8pp' : '+1.2pp', direction: 'up' }}
-          />
-          <KPICard
-            label="Active Doors"
-            value={kpis.activeDoors.toString()}
-            trend={{ value: 'All reporting', direction: 'neutral' }}
-          />
-          <KPICard
-            label="Suspicious"
-            value={kpis.suspicious.toString()}
-            trend={{ value: tenant === 'acme' ? '1.5x baseline' : '2.3x baseline', direction: 'up' }}
-          />
-          <KPICard
-            label="Connectors"
-            value={`${kpis.connectorsOnline}/${kpis.connectorsTotal} OK`}
-            trend={kpis.connectorsOnline < kpis.connectorsTotal ? { value: '1 degraded', direction: 'up' } : undefined}
-          />
-        </div>
+      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
 
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div className="bg-white rounded-lg shadow-lg p-4 h-80">
-            <h3 className="text-sm font-medium text-gray-600 mb-2">Grants vs Denies (24h)</h3>
-            <TimeSeriesChart tenant={tenant} />
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {activeTab === 'command' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <KPICard
+                label="Events Today"
+                value={kpis.eventsToday.toLocaleString()}
+                trend={{ value: '+12%', direction: 'neutral' }}
+              />
+              <KPICard
+                label="Deny Rate"
+                value={`${kpis.denyRate}%`}
+                trend={{ value: tenant === 'acme' ? '+0.8pp' : '+1.2pp', direction: 'up' }}
+              />
+              <KPICard
+                label="Active Doors"
+                value={kpis.activeDoors.toString()}
+                trend={{ value: 'All reporting', direction: 'neutral' }}
+              />
+              <KPICard
+                label="Suspicious"
+                value={kpis.suspicious.toString()}
+                trend={{ value: tenant === 'acme' ? '1.5x baseline' : '2.3x baseline', direction: 'up' }}
+              />
+              <KPICard
+                label="Connectors"
+                value={`${kpis.connectorsOnline}/${kpis.connectorsTotal} OK`}
+                trend={kpis.connectorsOnline < kpis.connectorsTotal ? { value: '1 degraded', direction: 'up' } : undefined}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="bg-white rounded-lg shadow-lg p-4 h-80 border border-gray-200">
+                <h3 className="text-sm font-medium text-gray-600 mb-2">Grants vs Denies (24h)</h3>
+                <TimeSeriesChart tenant={tenant} />
+              </div>
+              <div className="bg-white rounded-lg shadow-lg p-4 h-80 border border-gray-200">
+                <h3 className="text-sm font-medium text-gray-600 mb-2">Door Hotspots</h3>
+                <MapView tenant={tenant} />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <AlertsPanel alerts={alerts} />
+              <ConnectorHealth tenant={tenant} />
+            </div>
+
+            <EventsTable events={events} onEventClick={setSelectedEvent} />
           </div>
-          <div className="bg-white rounded-lg shadow-lg p-4 h-80">
-            <h3 className="text-sm font-medium text-gray-600 mb-2">Door Hotspots</h3>
-            <MapView tenant={tenant} />
-          </div>
-        </div>
+        )}
 
-        {/* Insights + Connector Health Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <AlertsPanel alerts={alerts} />
-          <ConnectorHealth tenant={tenant} />
-        </div>
+        {activeTab === 'governance' && (
+          <GovernanceView tenant={tenant} />
+        )}
 
-        {/* Events Table */}
-        <EventsTable events={events} onEventClick={setSelectedEvent} />
+        {activeTab === 'compliance' && (
+          <ComplianceView tenant={tenant} />
+        )}
+
+        {activeTab === 'mustering' && (
+          <MusteringView tenant={tenant} />
+        )}
       </main>
 
-      {/* Evidence Drawer */}
       {selectedEvent && (
         <EvidenceDrawer event={selectedEvent} onClose={() => setSelectedEvent(null)} />
       )}
