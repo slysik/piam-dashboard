@@ -114,7 +114,7 @@ export default function Dashboard() {
               <span className="text-white font-bold text-sm">IA</span>
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Identity & Access Analytics</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Unified PIAM Analytics</h1>
               <p className="text-xs text-gray-500">Physical Identity & Access Management</p>
             </div>
           </div>
