@@ -35,7 +35,7 @@ externalPort = 80
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["npm", "run", "start", "--prefix", "backup-site", "--", "-p", "5000", "-H", "0.0.0.0"]
+run = ["npm", "run", "start", "--prefix", "backup-site", "--", "-p", "5000"]
 build = ["npm", "run", "build", "--prefix", "backup-site"]
 
 [userenv]
