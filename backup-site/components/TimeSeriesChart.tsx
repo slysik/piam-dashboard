@@ -13,28 +13,48 @@ import {
 
 interface TimeSeriesChartProps {
   tenant: string;
+  timeRange?: '15m' | '60m' | '24h';
 }
 
-// Generate sample time series data for 24 hours
-function generateTimeSeriesData(tenant: string) {
+function generateTimeSeriesData(tenant: string, timeRange: '15m' | '60m' | '24h' = '24h') {
   const data = [];
   const now = new Date();
   const baseGrants = tenant === 'acme' ? 45 : 35;
   const baseDenies = tenant === 'acme' ? 2 : 5;
 
-  for (let i = 23; i >= 0; i--) {
-    const hour = new Date(now.getTime() - i * 60 * 60 * 1000);
-    const hourStr = hour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  if (timeRange === '15m') {
+    for (let i = 14; i >= 0; i--) {
+      const minute = new Date(now.getTime() - i * 60 * 1000);
+      const minStr = minute.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      data.push({
+        time: minStr,
+        grants: Math.floor(baseGrants / 4 + Math.random() * 10),
+        denies: Math.floor(baseDenies / 4 + Math.random() * (tenant === 'acme' ? 2 : 4)),
+      });
+    }
+  } else if (timeRange === '60m') {
+    for (let i = 11; i >= 0; i--) {
+      const fiveMin = new Date(now.getTime() - i * 5 * 60 * 1000);
+      const timeStr = fiveMin.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      data.push({
+        time: timeStr,
+        grants: Math.floor(baseGrants + Math.random() * 20),
+        denies: Math.floor(baseDenies + Math.random() * (tenant === 'acme' ? 4 : 8)),
+      });
+    }
+  } else {
+    for (let i = 23; i >= 0; i--) {
+      const hour = new Date(now.getTime() - i * 60 * 60 * 1000);
+      const hourStr = hour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      const hourOfDay = hour.getHours();
+      const activityMultiplier = hourOfDay >= 8 && hourOfDay <= 18 ? 1.5 : 0.3;
 
-    // Add some variation based on hour (more activity during business hours)
-    const hourOfDay = hour.getHours();
-    const activityMultiplier = hourOfDay >= 8 && hourOfDay <= 18 ? 1.5 : 0.3;
-
-    data.push({
-      time: hourStr,
-      grants: Math.floor((baseGrants + Math.random() * 30) * activityMultiplier),
-      denies: Math.floor((baseDenies + Math.random() * (tenant === 'acme' ? 5 : 10)) * activityMultiplier),
-    });
+      data.push({
+        time: hourStr,
+        grants: Math.floor((baseGrants + Math.random() * 30) * activityMultiplier),
+        denies: Math.floor((baseDenies + Math.random() * (tenant === 'acme' ? 5 : 10)) * activityMultiplier),
+      });
+    }
   }
   return data;
 }
@@ -55,8 +75,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export default function TimeSeriesChart({ tenant }: TimeSeriesChartProps) {
-  const data = generateTimeSeriesData(tenant);
+export default function TimeSeriesChart({ tenant, timeRange = '24h' }: TimeSeriesChartProps) {
+  const data = generateTimeSeriesData(tenant, timeRange);
 
   return (
     <ResponsiveContainer width="100%" height="100%">

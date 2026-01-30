@@ -82,6 +82,7 @@ export default function Dashboard() {
   const [tenant, setTenant] = useState<'acme' | 'buildright'>('acme');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [dataAge, setDataAge] = useState(12);
+  const [timeRange, setTimeRange] = useState<'15m' | '60m' | '24h'>('24h');
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -118,6 +119,21 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
+              {(['15m', '60m', '24h'] as const).map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setTimeRange(range)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                    timeRange === range
+                      ? 'bg-white text-gray-900 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  {range}
+                </button>
+              ))}
+            </div>
             <TenantSelector value={tenant} onChange={setTenant} />
             <div className="flex items-center text-sm text-gray-500">
               <span className={`w-2 h-2 rounded-full mr-2 ${dataAge < 15 ? 'bg-green-500' : dataAge < 30 ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
@@ -134,8 +150,13 @@ export default function Dashboard() {
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <KPICard
-                label="Events Today"
-                value={kpis.eventsToday.toLocaleString()}
+                label={timeRange === '15m' ? 'Events (15m)' : timeRange === '60m' ? 'Events (1h)' : 'Events Today'}
+                value={timeRange === '15m' 
+                  ? Math.round(kpis.eventsToday / 96).toLocaleString()
+                  : timeRange === '60m'
+                    ? Math.round(kpis.eventsToday / 24).toLocaleString()
+                    : kpis.eventsToday.toLocaleString()
+                }
                 trend={{ value: '+12%', direction: 'neutral' }}
               />
               <KPICard
@@ -162,8 +183,10 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <div className="bg-white rounded-lg shadow-lg p-4 h-80 border border-gray-200">
-                <h3 className="text-sm font-medium text-gray-600 mb-2">Grants vs Denies (24h)</h3>
-                <TimeSeriesChart tenant={tenant} />
+                <h3 className="text-sm font-medium text-gray-600 mb-2">
+                  Grants vs Denies ({timeRange === '15m' ? '15m' : timeRange === '60m' ? '1h' : '24h'})
+                </h3>
+                <TimeSeriesChart tenant={tenant} timeRange={timeRange} />
               </div>
               <div className="bg-white rounded-lg shadow-lg p-4 h-80 border border-gray-200">
                 <h3 className="text-sm font-medium text-gray-600 mb-2">Door Hotspots</h3>
