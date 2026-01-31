@@ -15,7 +15,7 @@ interface NavigationProps {
 export default function Navigation({ activeTab, onTabChange, visibleTabs }: NavigationProps) {
   return (
     <nav className="bg-white border-b border-gray-200">
-      <div className="max-w-7xl mx-auto px-4">
+      <div className="w-full px-6">
         <div className="flex space-x-1">
           {visibleTabs.map((tab) => (
             <button

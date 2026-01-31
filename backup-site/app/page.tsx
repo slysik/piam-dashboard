@@ -147,7 +147,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="w-full px-6 py-3 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -191,7 +191,7 @@ export default function Dashboard() {
 
       <Navigation activeTab={activeTab} onTabChange={setActiveTab} visibleTabs={visibleTabs} />
 
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="w-full px-6 py-6">
         {activeTab === 'executive' && (
           <ExecutiveOverview tenant={tenant} useLiveData={useLiveData} />
         )}
