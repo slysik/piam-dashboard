@@ -31,6 +31,12 @@ export function useDashboardData<T>({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (!useLiveData) {
+      setData(demoData);
+    }
+  }, [demoData, useLiveData]);
+
   const fetchLiveData = useCallback(async () => {
     if (!useLiveData) {
       setData(demoData);
