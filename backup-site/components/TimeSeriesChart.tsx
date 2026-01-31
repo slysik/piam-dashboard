@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -78,7 +79,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export default function TimeSeriesChart({ tenant, timeRange = '24h', useLiveData = false }: TimeSeriesChartProps) {
-  const demoData = generateTimeSeriesData(tenant, timeRange);
+  const demoData = useMemo(() => generateTimeSeriesData(tenant, timeRange), [tenant, timeRange]);
   const { data, loading, isLive } = useTimeSeriesWithFallback(tenant, useLiveData, timeRange, demoData);
 
   return (

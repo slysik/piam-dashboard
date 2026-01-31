@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useConnectorHealthWithFallback } from '@/hooks/useDashboardData';
 
 interface ConnectorHealthProps {
@@ -56,14 +57,14 @@ const statusStyles = {
 export default function ConnectorHealth({ tenant, useLiveData = false }: ConnectorHealthProps) {
   const demoConnectors = connectorData[tenant] || connectorData.acme;
   
-  const demoDataForHook = demoConnectors.map(c => ({
+  const demoDataForHook = useMemo(() => demoConnectors.map(c => ({
     name: c.name,
     type: c.pacsType,
     status: c.status as 'healthy' | 'degraded' | 'offline',
     latency: c.latencyMs,
     eventsPerMin: 0,
     lastCheck: c.lastCheck,
-  }));
+  })), [tenant]);
 
   const { data, loading, isLive } = useConnectorHealthWithFallback(tenant, useLiveData, demoDataForHook);
 

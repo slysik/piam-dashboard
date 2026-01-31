@@ -193,7 +193,7 @@ export default function Dashboard() {
 
       <main className="w-full px-6 py-6">
         {activeTab === 'executive' && (
-          <ExecutiveOverview tenant={tenant} useLiveData={useLiveData} />
+          <ExecutiveOverview tenant={tenant} useLiveData={useLiveData} timeRange={timeRange} />
         )}
 
         {activeTab === 'risk' && (

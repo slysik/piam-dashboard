@@ -5,9 +5,43 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 interface ExecutiveOverviewProps {
   tenant: string;
   useLiveData?: boolean;
+  timeRange?: '15m' | '60m' | '24h';
 }
 
-const riskTrendData = [
+const riskTrendData15m = [
+  { date: '19:30', riskScore: 45, incidents: 0 },
+  { date: '19:31', riskScore: 48, incidents: 0 },
+  { date: '19:32', riskScore: 52, incidents: 1 },
+  { date: '19:33', riskScore: 49, incidents: 0 },
+  { date: '19:34', riskScore: 55, incidents: 0 },
+  { date: '19:35', riskScore: 58, incidents: 1 },
+  { date: '19:36', riskScore: 54, incidents: 0 },
+  { date: '19:37', riskScore: 51, incidents: 0 },
+  { date: '19:38', riskScore: 47, incidents: 0 },
+  { date: '19:39', riskScore: 50, incidents: 0 },
+  { date: '19:40', riskScore: 53, incidents: 0 },
+  { date: '19:41', riskScore: 56, incidents: 1 },
+  { date: '19:42', riskScore: 52, incidents: 0 },
+  { date: '19:43', riskScore: 48, incidents: 0 },
+  { date: '19:44', riskScore: 46, incidents: 0 },
+];
+
+const riskTrendData60m = [
+  { date: '18:45', riskScore: 42, incidents: 1 },
+  { date: '18:50', riskScore: 45, incidents: 0 },
+  { date: '18:55', riskScore: 48, incidents: 1 },
+  { date: '19:00', riskScore: 52, incidents: 2 },
+  { date: '19:05', riskScore: 55, incidents: 1 },
+  { date: '19:10', riskScore: 51, incidents: 0 },
+  { date: '19:15', riskScore: 48, incidents: 1 },
+  { date: '19:20', riskScore: 53, incidents: 0 },
+  { date: '19:25', riskScore: 56, incidents: 1 },
+  { date: '19:30', riskScore: 52, incidents: 0 },
+  { date: '19:35', riskScore: 49, incidents: 0 },
+  { date: '19:40', riskScore: 47, incidents: 1 },
+];
+
+const riskTrendData24h = [
   { date: 'Mon', riskScore: 42, incidents: 2 },
   { date: 'Tue', riskScore: 38, incidents: 1 },
   { date: 'Wed', riskScore: 55, incidents: 4 },
@@ -16,6 +50,12 @@ const riskTrendData = [
   { date: 'Sat', riskScore: 35, incidents: 1 },
   { date: 'Sun', riskScore: 28, incidents: 0 },
 ];
+
+function getRiskTrendData(timeRange: '15m' | '60m' | '24h') {
+  if (timeRange === '15m') return riskTrendData15m;
+  if (timeRange === '60m') return riskTrendData60m;
+  return riskTrendData24h;
+}
 
 const siteRiskData = [
   { site: 'HQ Tower', risk: 72, events: 3420 },
@@ -30,7 +70,8 @@ const complianceData = [
   { name: 'Non-Compliant', value: 18, color: '#ef4444' },
 ];
 
-export default function ExecutiveOverview({ tenant, useLiveData = false }: ExecutiveOverviewProps) {
+export default function ExecutiveOverview({ tenant, useLiveData = false, timeRange = '24h' }: ExecutiveOverviewProps) {
+  const riskTrendData = getRiskTrendData(timeRange);
   const totalIdentities = complianceData.reduce((a, b) => a + b.value, 0);
   const complianceRate = Math.round((complianceData[0].value / totalIdentities) * 100);
 
@@ -61,7 +102,9 @@ export default function ExecutiveOverview({ tenant, useLiveData = false }: Execu
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Risk Trend (7 Days)</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Risk Trend ({timeRange === '15m' ? '15 Minutes' : timeRange === '60m' ? '1 Hour' : '7 Days'})
+          </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={riskTrendData}>

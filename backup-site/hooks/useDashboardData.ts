@@ -131,32 +131,62 @@ export function useTimeSeriesWithFallback(
   const tenantId = tenant === 'acme' ? 'acme-corp' : 'buildright-construction';
   const minutes = timeRange === '15m' ? 15 : timeRange === '60m' ? 60 : 1440;
   
-  return useDashboardData({
-    liveQuery: `
-      SELECT
-        formatDateTime(minute, '%H:%i') as time,
-        grants,
-        denies
-      FROM piam.v_timeseries_minute
-      WHERE tenant_id = '${tenantId}'
-        AND minute >= now() - INTERVAL ${minutes} MINUTE
-      ORDER BY minute ASC
-    `,
-    demoData,
-    useLiveData,
-    refreshInterval: 15000,
-    transformLiveData: (rows) => {
-      if (rows.length === 0) return demoData;
-      return rows.map((row: unknown) => {
-        const r = row as Record<string, unknown>;
-        return {
-          time: String(r.time || ''),
-          grants: Number(r.grants || 0),
-          denies: Number(r.denies || 0),
-        };
-      });
-    },
-  });
+  const [data, setData] = useState(demoData);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!useLiveData) {
+      setData(demoData);
+      return;
+    }
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const result = await queryClickHouse(`
+          SELECT
+            formatDateTime(minute, '%H:%i') as time,
+            grants,
+            denies
+          FROM piam.v_timeseries_minute
+          WHERE tenant_id = '${tenantId}'
+            AND minute >= now() - INTERVAL ${minutes} MINUTE
+          ORDER BY minute ASC
+        `);
+        if (Array.isArray(result) && result.length > 0) {
+          setData(result.map((row: unknown) => {
+            const r = row as Record<string, unknown>;
+            return {
+              time: String(r.time || ''),
+              grants: Number(r.grants || 0),
+              denies: Number(r.denies || 0),
+            };
+          }));
+        } else {
+          setData(demoData);
+        }
+        setError(null);
+      } catch (err) {
+        console.error('ClickHouse query failed:', err);
+        setError('Failed to fetch live data');
+        setData(demoData);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 15000);
+    return () => clearInterval(interval);
+  }, [tenant, useLiveData, timeRange, demoData, tenantId, minutes]);
+
+  return {
+    data,
+    loading,
+    error,
+    isLive: useLiveData && !error,
+  };
 }
 
 export function useRecentEventsWithFallback(
