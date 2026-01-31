@@ -19,6 +19,7 @@ import ExecutiveOverview from '@/components/ExecutiveOverview';
 import RealTimeRiskPanel from '@/components/RealTimeRiskPanel';
 import HireToRetireView from '@/components/HireToRetireView';
 import SelfServiceAnalytics from '@/components/SelfServiceAnalytics';
+import SettingsPanel from '@/components/SettingsPanel';
 
 const allTabs = [
   { id: 'executive', label: 'Executive Overview', icon: '📊' },
@@ -118,6 +119,8 @@ export default function Dashboard() {
   const [dataAge, setDataAge] = useState(12);
   const [timeRange, setTimeRange] = useState<'15m' | '60m' | '24h'>('24h');
   const [isStreaming, setIsStreaming] = useState(false);
+  const [useLiveData, setUseLiveData] = useState(false);
+  const [clickhouseUrl, setClickhouseUrl] = useState('http://localhost:8123');
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -179,6 +182,12 @@ export default function Dashboard() {
               <span className={`w-2 h-2 rounded-full mr-2 ${dataAge < 15 ? 'bg-green-500' : dataAge < 30 ? 'bg-yellow-500' : 'bg-red-500'}`}></span>
               Data: {dataAge}s ago
             </div>
+            <SettingsPanel
+              useLiveData={useLiveData}
+              onToggleLiveData={setUseLiveData}
+              clickhouseUrl={clickhouseUrl}
+              onClickhouseUrlChange={setClickhouseUrl}
+            />
           </div>
         </div>
       </header>
