@@ -1,0 +1,345 @@
+# Unified PIAM Analytics – ClearView Intelligence Feature PRD
+
+## Document Purpose
+
+This PRD defines a set of high-impact features for **ClearView Intelligence**, a unified PIAM analytics dashboard focused on closing the most critical integration and intelligence gaps in physical identity and access management. The goal is to demonstrate how ClearView Intelligence can act as the missing analytics layer across PIAM, PACS, HR, IT, and compliance systems.
+
+---
+
+## 1. Real-Time Risk & Anomaly Panel
+
+### Problem
+
+Security Operations teams lack a truly real-time, **actionable** view of risky access behavior. Existing “real-time” dashboards are delayed, noisy, and require operators to manually hunt for anomalies instead of surfacing them proactively.
+
+### Goals & Outcomes
+
+- Detect and visualize risky access patterns within seconds.
+- Provide a consolidated view of anomalies by identity, door, zone, and site.
+- Give operators a clear “Anomaly Story” to investigate without pivoting across tools.
+
+### Users
+
+- SOC analysts
+- Physical security managers
+- Regional security directors
+
+### User Stories
+
+1. As a SOC analyst, I want to see a live stream of access events filtered to after-hours and denied attempts, so I can quickly spot potential incidents.
+2. As a security manager, I want to see a ranked list of highest-risk identities and doors for the past 24 hours, so I know where to focus investigations.
+3. As a regional director, I want to click into a user and see a timeline of recent anomalies, so I can understand the context behind their risk score.
+
+### Core Features (MVP)
+
+- **Live Event Stream Widget**
+  - 15s freshness target (simulated via materialized views or near-real-time ingestion).
+  - Filters: tenant, site, building, door, event type, result (granted/denied), time window.
+- **Rule-Based Anomaly Flags**
+  - `is_after_hours` – access outside defined schedule.
+  - `denied_streak` – N denied attempts within M minutes at the same door.
+  - `impossible_travel_flag` – badge used at two distant doors within an impossible time window.
+- **Risk Scoring**
+  - Per-identity and per-door risk scores computed from:
+    - Count and severity of recent anomalies.
+    - Sensitivity of accessed zones.
+- **Anomaly Story Drilldown**
+  - For a selected identity:
+    - Timeline of events and anomalies for last 24 hours.
+    - Highlighted doors, zones, and sites.
+
+### Non-Goals
+
+- Full ML-based anomaly detection (v1 is rules-based).
+- Ticketing/workflow integration.
+
+### Acceptance Criteria
+
+- Live events view updates without full-page refresh on a 15–30 second cadence.
+- At least three anomaly types are computed and visible as flags in the event stream.
+- Risk scores are visible for identities and doors, and clicking a score opens a 24h anomaly timeline.
+- Filters apply globally across charts on the Real-Time Risk panel.
+
+---
+
+## 2. Hire-to-Retire Access Hygiene Dashboard
+
+### Problem
+
+HR, IT, and physical access systems are often out of sync, leading to orphaned badges, terminated-but-active accounts, and dormant credentials that create compliance and insider-threat risk.
+
+### Goals & Outcomes
+
+- Provide instant visibility into access lifecycle hygiene.
+- Highlight misalignment between HR employment status and badge state.
+- Support governance and audit conversations with a single view.
+
+### Users
+
+- HR operations
+- Identity & access management (IAM) teams
+- Security governance / risk & compliance (GRC)
+
+### User Stories
+
+1. As an IAM analyst, I want to see all terminated employees with active badges, so I can remediate them quickly.
+2. As an HR manager, I want to see contractors whose end date has passed but still have access, so I can coordinate with security.
+3. As a GRC lead, I want lifecycle hygiene KPIs for quarterly reviews, so I can show auditors our control posture.
+
+### Core Features (MVP)
+
+- **Lifecycle Status Tiles**
+  - `Terminated with Active Badge` (count + trend).
+  - `Contractors Past End Date with Active Badge`.
+  - `Dormant Badges` – no physical activity in last N days.
+- **HR ↔ PIAM State Matrix**
+  - Simple table or chart showing counts in combinations like:
+    - `HR=Active / Badge=Active`
+    - `HR=Terminated / Badge=Active`
+    - `HR=Terminated / Badge=Disabled`
+- **Identity Drilldown**
+  - For a selected user:
+    - HR attributes (employment status, start/end date, department).
+    - PIAM attributes (badge IDs, status, zones, last swipe).
+    - Simple timeline of last X days of access.
+
+### Data Model (Demo)
+
+- `hr_person` (person_id, status, start_date, end_date, employee_type, department).
+- `piam_identity` (person_id, badge_id, badge_status, primary_site).
+- `piam_events` (badge_id, door_id, ts, result).
+
+### Non-Goals
+
+- Real HR system integration (demo uses synthetic data).
+- Automated deprovisioning workflows.
+
+### Acceptance Criteria
+
+- Dashboard shows numeric tiles for each hygiene metric with correct counts.
+- A matrix or chart visualizes the HR vs PIAM state combinations.
+- Clicking on a tile or row reveals an identity list and supports drilldown into a user timeline.
+- All metrics update when the date range filter is adjusted.
+
+---
+
+## 3. Compliance & Audit One-Click Reports
+
+### Problem
+
+Compliance teams spend days pulling data from multiple systems to prepare audit evidence for frameworks like SOX, HIPAA, PCI-DSS, etc. PIAM dashboards rarely provide ready-made evidence views.
+
+### Goals & Outcomes
+
+- Reduce audit prep from days to minutes in the demo narrative.
+- Provide standard metrics that auditors expect around access control.
+- Show exportable evidence snapshots for a given period.
+
+### Users
+
+- Compliance officers
+- Internal/external auditors
+- CISOs and security governance leads
+
+### User Stories
+
+1. As a compliance officer, I want to select a date range and generate a report of all privileged area entries, so I can answer audit questions quickly.
+2. As an auditor, I want a list of dormant badges over the past quarter, so I can confirm periodic review controls.
+3. As a CISO, I want a single compliance dashboard to review before an audit meeting.
+
+### Core Features (MVP)
+
+- **Audit Mode Filter Bar**
+  - Global filters: date range, tenant, site, framework label (for demo only).
+- **Standard KPIs**
+  - `Dormant badges` by site.
+  - `Privileged zone entries` (who accessed high-security areas).
+  - `Lifecycle exceptions` (terminated/expired but active).
+- **Evidence Tables**
+  - Table of all entries into designated “privileged zones” in the selected period.
+  - Table of lifecycle exceptions (identity, HR status, badge state, last activity).
+- **Export Capability (Demo-Level)**
+  - “Export CSV” buttons or links for key evidence tables.
+
+### Non-Goals
+
+- Full, framework-specific control catalogs.
+- Policy management or remediation workflows.
+
+### Acceptance Criteria
+
+- A dedicated “Compliance & Audit” tab exists with its own filter bar.
+- KPIs and tables correctly respect date and site filters.
+- Clicking “Export” downloads a CSV (or simulates export) for at least one evidence table.
+- A sample “Audit Snapshot” view exists showing a small set of preselected metrics and tables.
+
+---
+
+## 4. Persona-Based Homepages
+
+### Problem
+
+Current PIAM dashboards are one-size-fits-all, presenting the same view to executives, SOC operators, facilities, and IT. This leads to cluttered interfaces and poor adoption.
+
+### Goals & Outcomes
+
+- Provide tailored entry points per persona.
+- Reuse existing dashboards/views but present different defaults and emphasis.
+- Showcase how the same underlying data can tell different stories to different stakeholders.
+
+### Users
+
+- Executive / C-suite
+- SOC / Security
+- Facilities / Real Estate
+- IT / HR / IAM
+- Compliance / Audit
+
+### User Stories
+
+1. As an executive, I want a simple, high-level dashboard with risk and incident KPIs, so I can understand my exposure without technical noise.
+2. As a SOC analyst, I want my homepage to show real-time anomalies and active alerts, so I can respond quickly.
+3. As a facilities manager, I want to see occupancy, mustering readiness, and high-traffic entrances, so I can manage space and safety.
+
+### Core Features (MVP)
+
+- **Persona Selector**
+  - Global toggle in the ClearView Intelligence web shell (e.g., dropdown: Executive, SOC, Facilities, IT/HR, Compliance).
+- **Persona-Specific Layouts**
+  - Exec: top risk KPIs, incidents by site, trend lines.
+  - SOC: Real-Time Risk Panel, anomaly list, door/zone heatmap.
+  - Facilities: occupancy/traffic charts, mustering readiness indicators (simulated).
+  - IT/HR: lifecycle hygiene tiles, access anomalies per department.
+  - Compliance: Compliance & Audit tab as default view.
+- **Shared Filter State**
+  - Persona view respects shared filters for tenant/site/time window where applicable.
+
+### Non-Goals
+
+- Complex per-user permissions or SSO integration in the demo.
+- Full customization UI for defining personas (hard-coded personas are fine).
+
+### Acceptance Criteria
+
+- Persona selector is visible and switching persona updates which dashboard or tab is shown.
+- Each persona has at least one distinct layout or arrangement of charts.
+- Filters work consistently across persona views.
+- It is possible to demo a narrative that moves from Exec → SOC → Compliance with minimal UI friction.
+
+---
+
+## 5. Video Correlation Stub (Investigation View)
+
+### Problem
+
+Investigations today require manual correlation between access logs and VMS timelines. Even if full VMS integration is out of scope, the demo should show how ClearView Intelligence would tie them together.
+
+### Goals & Outcomes
+
+- Convey the vision of “one click from event to video” without needing a full VMS stack.
+- Provide a simple investigation timeline centered on badge events.
+
+### Users
+
+- SOC analysts
+- Investigators / incident response
+- Physical security leadership
+
+### User Stories
+
+1. As an investigator, I want to click on an access event and see a link to the associated video clip, so I can quickly validate what happened.
+2. As a security manager, I want a timeline of one user’s movement with video markers, so I can review a complete incident.
+
+### Core Features (MVP)
+
+- **Event Table with Video Indicator**
+  - Column `has_video` (boolean) and/or `video_url` (string).
+  - UI shows a video icon for events with `has_video = true`.
+- **Video Link Behavior**
+  - Clicking the icon opens:
+    - A modal with placeholder thumbnail, door, timestamp, and identity.
+    - Or a new tab pointing to a mocked URL (e.g., `/video/demo?id=123`).
+- **Investigation Timeline**
+  - For a selected identity:
+    - Chronological view of events with video markers on events where `has_video = true`.
+
+### Non-Goals
+
+- Real VMS integration, playback controls, or storage concerns.
+- Video analytics / AI detections.
+
+### Acceptance Criteria
+
+- At least one dashboard or detail view includes an events table with a video icon per row where `has_video = true`.
+- Clicking the icon opens some form of video placeholder UI.
+- An identity-centric timeline exists that shows events and video markers.
+
+---
+
+## 6. Self-Service & Approval Analytics (Simulation)
+
+### Problem
+
+Self-service access management workflows exist in many PIAM platforms, but analytics around those workflows (volumes, SLAs, riskier requests) are often missing.
+
+### Goals & Outcomes
+
+- Show that ClearView Intelligence understands not just events but also workflows.
+- Help managers and admins understand access request volume, latency, and risk.
+
+### Users
+
+- Line managers / approvers
+- IAM and security admins
+- Process owners for access governance
+
+### User Stories
+
+1. As a manager, I want to understand how many access requests are pending for my team, so I can prioritize approvals.
+2. As an IAM lead, I want to see the average approval time per site or zone, so I can identify bottlenecks.
+3. As a security owner, I want to see how many requests target high-risk zones, so I can tune policies.
+
+### Core Features (MVP)
+
+- **Access Requests Funnel**
+  - Counts of requests by status: Pending, Approved, Rejected, Expired.
+- **SLA Metrics**
+  - Average/median approval time overall and by site/zone.
+- **Risk Tagging**
+  - Simple rule: requests for specific zones/roles are “High Risk” and highlighted in charts.
+
+### Data Model (Demo)
+
+- `access_request` (request_id, requester_id, approver_id, zone_id, created_at, approved_at, status, risk_level).
+
+### Non-Goals
+
+- Building actual self-service forms or approval workflows in this demo.
+- Notifications or integrations with external systems (e.g., email, Slack).
+
+### Acceptance Criteria
+
+- “Access Requests” view exists with at least one funnel chart and one SLA chart.
+- A table of requests shows requester, zone, status, and time to approve.
+- High-risk requests are visually distinct (color or icon).
+
+---
+
+## Implementation Notes (Demo Context)
+
+- Backing store: MySQL → ClickHouse (or similar) for reporting tables and views.
+- BI layer: Superset (primary) and/or Grafana where live time-series visuals are needed.
+- Web shell:
+  - Lightweight web UI embedding ClearView Intelligence dashboards and controlling persona selection.
+  - Optional “Export” and “Audit Snapshot” buttons wired to BI exports or mocked endpoints.
+- Data:
+  - Synthetic multi-tenant, multi-site PIAM events, HR records, and request data for 4 tenants.
+  - Emphasis on realistic patterns that can tell a compelling story in a 15-minute demo.
+
+---
+
+## Open Questions
+
+- Which persona should be the **default** landing page for the ClearView Intelligence demo (Executive vs SOC)?
+- What specific terminology (e.g., “Risk Score,” “Converged Identity Timeline,” “Anomaly Story”) should appear in marketing vs internal labels?
+- How deep should the convergence story go in this demo (physical + logical auth), given time constraints?
