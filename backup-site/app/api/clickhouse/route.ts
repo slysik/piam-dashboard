@@ -4,15 +4,19 @@ export async function POST(request: NextRequest) {
   try {
     const { query, database = 'piam' } = await request.json();
 
-    const clickhouseUrl = process.env.CLICKHOUSE_URL;
     const username = process.env.CLICKHOUSE_USER || 'default';
     const password = process.env.CLICKHOUSE_PASSWORD || '';
 
-    if (!clickhouseUrl) {
-      return NextResponse.json(
-        { error: 'ClickHouse URL not configured' },
-        { status: 500 }
-      );
+    // Support full URL (for ClickHouse Cloud) or construct from host/port (for local)
+    let clickhouseUrl: string;
+    if (process.env.CLICKHOUSE_URL) {
+      clickhouseUrl = process.env.CLICKHOUSE_URL;
+    } else {
+      const host = process.env.CLICKHOUSE_HOST || 'localhost';
+      const port = process.env.CLICKHOUSE_PORT || '8123';
+      // Use HTTPS for ClickHouse Cloud (port 8443) or when host contains 'clickhouse.cloud'
+      const protocol = port === '8443' || host.includes('clickhouse.cloud') ? 'https' : 'http';
+      clickhouseUrl = `${protocol}://${host}:${port}`;
     }
 
     const url = new URL(clickhouseUrl);
