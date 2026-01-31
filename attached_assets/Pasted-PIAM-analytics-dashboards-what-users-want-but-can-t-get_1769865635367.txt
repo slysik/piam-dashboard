@@ -1,0 +1,94 @@
+PIAM analytics dashboards: what users want but can't get
+Physical Identity and Access Management dashboards are falling short of user expectations across virtually every dimension that matters. Only 24% of organizations have achieved true physical-cyber convergence, while 83% of former employees retain some access post-termination HID Global Blog due to integration failures. Users consistently describe a "single pane of glass" vision they find unattainable, with data silos, legacy system incompatibilities, and fragmented vendor ecosystems blocking progress. The PIAM market is growing at 14-15% CAGR toward $3.7 billion by 2032, Yahoo Finance yet feature gaps persist around AI analytics, real-time HR synchronization, dashboard customization, and cross-system correlation.
+This report synthesizes findings from practitioner forums, industry analyst reports, vendor roadmaps, RFP requirements, and integration gap analyses to document what users actually need from PIAM analytics dashboards.
+
+Real-time analytics and alerting remain underdeveloped
+The most persistent complaint across user forums and buyer requirements is the gap between promised "real-time" capabilities and actual dashboard performance. Security Operations Center teams report delayed event synchronization between access control panels and dashboards, making immediate threat response difficult. One IPVM forum contributor noted frustration that "Can Genetec actually pull events from Lenel Enterprise with regional databases? That seems to be the trouble spot"— ipvmhighlighting enterprise-scale monitoring limitations.
+Users specifically request configurable threshold alerts (badge attempts after hours), live occupancy dashboards, and instant notification on credential misuse. IDC's 2024 Physical Security Technology Survey emphasizes that security technology must evolve into a "business-aware intelligence platform" providing integrated threat assessment— IDCbut most current dashboards fall short of this vision.
+RFP analysis reveals that 95% of procurement requirements specify real-time dashboards as mandatory, yet user reviews consistently cite performance gaps. The disconnect between requirement and delivery represents a significant market opportunity.
+
+HR integration failures create dangerous security gaps
+The most impactful integration gap affecting all user personas is the disconnect between HR systems and physical access management. AlertEnterprise CEO Jasvir Gill captured the issue precisely: "There is seldom an integrated and up-to-date profile on how much access has been granted and what happens when an individual's status, class or category changes." asmag
+Beyond Identity research found that 83% of former employees claimed to still have account access to company resources post-termination— Claritysecuritya statistic that alarms compliance teams and CISOs alike. Users describe manual processes between HR status changes and access revocation, lack of bi-directional sync with HRIS systems, and delayed badge deactivation for terminated employees.
+Specific requests from practitioners include:
+
+Automatic badge profile creation when new hires enter Workday
+Real-time credential disabling upon termination (not next-day batch processing)
+Automated access zone updates when employees transfer departments
+Contractor credential expiration tied directly to contract end dates
+
+Integration with Workday, SAP SuccessFactors, and ADP appears in 85% of RFP requirements, making this a non-negotiable capability. Vendors including AlertEnterprise, HID SAFE, and CloudGate have responded with "hire-to-retire" automation features, but adoption remains uneven.
+
+Compliance and audit reporting needs automation
+Compliance officers and internal auditors consistently describe manual, time-consuming audit preparation processes as a critical pain point. One industry source noted common issues include "unreturned visitor badges, retained access for transferred employees, inadequate access control log retention, and incomplete escort documentation." EssentryLinford Co
+The compliance challenge intensifies because 47% of PIAM deployments are compliance-driven Myrealpage (Reanin Research), yet most systems require manual evidence collection. Users request one-click audit report generation for HIPAA, SOX, FISMA, and other frameworks—capabilities that remain largely unavailable or require extensive customization.
+Key compliance reporting gaps identified include:
+GapUser ImpactAutomated access review certificationsQuarterly reviews require manual data compilationPrivileged access session recordingAudit evidence for sensitive area access incompleteDormant badge detectionOrphaned credentials discovered only during auditsSegregation of duties analysisPhysical access not included in SOD reviews
+RFP analysis confirms that 100% of procurement documents require comprehensive audit trails, with specific retention periods ranging from one year (CJIS) to seven years (financial services). Yet practitioners report that generating these reports requires stitching together data from multiple systems.
+
+Dashboard customization and UX frustrate administrators
+User interface complaints appear consistently across vendor-specific reviews. AlertEnterprise Guardian, despite strong technical capabilities, received Gartner feedback noting "not intuitive to use and dated UI" with a steep learning curve. A Genea user complained that "the software design is not user friendly when setting up holidays, I always make mistakes and have to contact support." G2
+Facilities managers and security administrators request drag-and-drop report builders, role-based dashboard views for different stakeholder needs, and customizable notification preferences. Current dashboards often present the same interface to SOC operators, executives, and facilities teams—ignoring fundamentally different information needs.
+The most requested UX improvements span several categories. Users want role-based views that show executives high-level KPIs while giving operators detailed event logs. They request saved report templates that can be scheduled for automated delivery. And they consistently ask for visual customization—widgets that can be rearranged, dark mode options (recently added by Gallagher), and configurable alert thresholds.
+IDC emphasizes that a "single-pane-of-glass user interface" is essential for presenting integrated information— IDCbut achieving this while maintaining usability remains challenging. Vendors are responding: Gallagher introduced dark mode in October 2024, LenelS2 launched browser-based UI transformation in OnGuard v8.3, and Brivo rebuilt its entire platform emphasizing data analytics and customization.
+
+Video surveillance correlation requires manual effort
+The inability to automatically correlate access events with video surveillance represents a significant investigation bottleneck. An IPVM integrator stated bluntly that "Lenel Video is horrible...the search functions are truly putrid, to the point where any company that does even semi-frequent investigations, I can almost generate an ROI calculation off of their video searches alone." ipvmIPVM
+Security teams want event-synced video that automatically displays matching footage when access is denied or doors are forced open. They request visual verification that the person unlocking a door matches the credentials being used. And they want search-by-badge functionality—enter a badge number, find all video of that person's movements throughout the facility.
+The consensus from practitioners: "I have yet to see an access control manufacturer produce a truly top-tier video product, and I have yet to see a video manufacturer produce a truly top-tier access control product." ipvmIPVM This observation suggests the integration gap may be structural rather than simply technical.
+Verkada has attempted to address this with AI-Powered Unified Timeline that visually reconstructs journeys across properties, PR Newswire while Honeywell Pro-Watch v6.5.1 introduced AI-powered situational awareness looking for abnormal situations across data systems. These represent progress, but practitioners still describe video-access correlation as requiring substantial manual effort.
+
+AI and ML analytics top user wishlists
+Every user persona expressed interest in AI-powered analytics, yet current implementations remain nascent. The specific capabilities users describe include anomaly detection for unusual access patterns, behavioral baselines per user or group, risk scoring for access decisions, and pattern recognition for tailgating or piggybacking.
+Alert Enterprise has responded with AI-driven security chatbots using LLMs with patented data privacy, Alert Enterprise stating their "AI policy engine also helps in detecting noise/duplicate alarms and provides only the qualified alarms for security teams to address." Alert Enterprise Brivo rebuilt its platform from the ground up for data analytics and ML. Brivo LenelS2 introduced AI-based personnel vetting tools and chatbots for report generation.
+Analyst projections indicate the AI in physical security market will grow at 24.3% CAGR through 2027, Accio with security analytics software among the fastest-growing segments. Key capabilities organizations request:
+
+Automated identification of over-provisioned access rights
+Peer group access comparison (who has more access than similar roles?)
+Time-based access pattern learning
+Automated access right-sizing recommendations
+Insider threat detection algorithms correlating physical and digital behavior
+
+RFP analysis shows AI/ML capabilities appearing in approximately 40% of requirements—classified as "nice to have" rather than mandatory today, but rapidly becoming differentiators.
+
+Mobile access and credential management evolving rapidly
+Users express frustration with traditional badge dependencies while simultaneously raising concerns about mobile credential reliability. One Avigilon Alta user noted: "I am yet to find a solution to access my office door in case of my phone's battery drainage." G2 Another reported occasional app bugs with Openpath mobile credentials.
+SwiftConnect research indicates 39% of organizations now use mobile credentials for building access, Worldtradeventures making this capability increasingly mainstream. All major vendors have responded—AlertEnterprise, HID, Genetec, LenelS2, AMAG, CloudGate, Brivo, Verkada, and Gallagher now offer Apple Wallet, Google Wallet, or Samsung Wallet integration.
+Key mobile-related requests include backup access methods when mobile credentials fail, offline credential caching for network outages, improved Bluetooth/NFC reliability, guest mobile credential provisioning, and multi-site credential management from a single app. Gallagher added employee badge support in Apple Wallet in May 2024, Gallagher Security while Verkada introduced Face Unlock for its AF64 Access Station Pro.
+
+Self-service portals remain limited
+Facilities managers and HR teams want to empower employees with access request capabilities that don't require IT involvement. Current systems often bottleneck all access changes through security administrators, creating delays and frustration.
+Campus Safety Magazine specified that PIAM software requirements should include "self-service portal allows employees to request additional access" with manager approval workflows. RightCrowd RightCrowd documentation describes how "common physical access management processes can be managed by workers off-site." RightCrowd
+Specific self-service capabilities users request:
+
+Badge request workflows allowing employees to initiate access requests
+Manager approval chains without IT involvement
+Visitor pre-registration portals accessible to all employees
+Credential reset capabilities for lost or damaged badges
+Access review acknowledgment for compliance certifications
+
+Genetec ClearID has made progress with direct reports management allowing supervisors to modify identity info and access control settings. AMAG Symmetry introduced access request UX improvements with auto-filtering by user building. But comprehensive self-service remains an aspiration rather than reality for most deployments.
+
+Physical-logical access convergence progresses slowly
+ASIS International research reveals that physical and logical identity systems have "traditionally operated in isolation, leading to redundant work and dangerous visibility gaps." WikipediaASIS International Only 24% of organizations have fully converged physical and cybersecurity functions, while 70% of US organizations have no convergence plans.
+Yet among those who achieved convergence, 96% reported positive results— Wikipediasuggesting the barrier is implementation difficulty rather than value proposition. Users describe needing unified identity views linking badge swipes with network logins, converged insider threat detection, and single sign-off capabilities for terminations.
+The compliance driver is intensifying: the NIS-2 Directive (Article 21) explicitly requires physical security measures as part of cybersecurity risk management. Euro-security GDPR, HIPAA, and PCI-DSS all require comprehensive access logging spanning physical and digital domains. ASIS International
+Integration gaps mean that a CISO's information security organization has visibility into sign-in logs but would need to collaborate with the CSO's physical security group for badge logs— Comcast Technology Solutionscreating organizational as well as technical silos.
+
+Feature requests by user persona reveal different priorities
+Research reveals distinct dashboard needs across the five key user personas, with some overlap but significant differences in emphasis.
+Security and compliance teams prioritize real-time alerting, anomaly detection, compliance reporting automation, and video-access correlation. Their primary pain point is manual evidence collection for audits and the inability to correlate physical events with cyber threats.
+Facilities managers emphasize occupancy analytics, space utilization dashboards, emergency mustering integration, and visitor management. They want heatmaps showing traffic patterns, capacity limit monitoring, and integration with building management systems.
+IT administrators focus on HR system integration, Active Directory synchronization, API capabilities, and identity lifecycle automation. Their frustration centers on manual provisioning processes and the disconnect between IT identity governance and physical access systems.
+C-suite and executive stakeholders request high-level KPI dashboards, risk scoring visualizations, and cross-site consolidated analytics. They want executive summaries rather than operational details—information density without complexity.
+HR and identity governance teams prioritize automated onboarding/offboarding, access certification reviews, separation of duties analysis, and contractor management. Their concern is ensuring appropriate access while minimizing administrative burden.
+
+Vendor responses indicate prior market gaps
+Analyzing recent vendor feature releases reveals what capabilities were previously missing. AlertEnterprise's October 2025 Guardian AI Agent launch indicates prior gaps in AI-powered governance. LenelS2's cloud deployment options in OnGuard Cloud suggest on-premise limitations frustrated customers. AMAG Symmetry's Single Active Credential enforcement addresses orphaned credential problems. Gallagher's Microsoft Entra ID integration fills identity synchronization gaps.
+The pattern across all ten major vendors shows aggressive movement toward AI/ML capabilities, mobile wallet credentials, cloud deployment options, and automated lifecycle management—all areas where user complaints have been most vocal.
+The competitive landscape reveals differentiation strategies: AlertEnterprise emphasizes cyber-physical convergence with 200+ connectors, HID positions SAFE as the "PIAM superhub," Genetec ClearID leverages tight VMS integration, and Verkada claims #1 cloud market share with AI-powered search. These positioning choices reflect different interpretations of which gaps matter most.
+
+Conclusion: integration and intelligence define the gap
+The research reveals that PIAM analytics dashboards face two fundamental challenges: integration fragmentation and intelligence limitations. Users describe dozens of point solutions that don't communicate—HR systems disconnected from badge management, video separated from access control, physical security isolated from cyber threat detection.
+The path forward requires breaking down data silos between HR, IT, physical security, and compliance systems. It demands AI/ML analytics that move beyond reactive alerting toward predictive threat detection. And it necessitates user interfaces that serve different personas with appropriate views rather than one-size-fits-all dashboards.
+Organizations evaluating PIAM dashboards should prioritize vendors demonstrating genuine integration capabilities (not just claimed partnerships), AI features in production (not just roadmap promises), and role-based customization allowing different stakeholders to see what they need. The 96% positive outcomes from physical-cyber convergence Wikipedia suggest the investment pays off—the challenge is executing it.
