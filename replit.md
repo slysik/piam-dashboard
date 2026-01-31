@@ -12,14 +12,14 @@ A multi-tenant Physical Identity and Access Management (PIAM) analytics dashboar
 6. **Compliance & Audit** - Audit mode, privileged zone evidence, lifecycle exceptions, CSV export
 7. **Access Requests** - Self-service funnel, SLA by zone, pending requests
 8. **Mustering** (Facilities) - Emergency accounted/missing/en-route status
-9. **(Optional) AI Builder** - GenAI dashboard creation demo
+9. **Dashboard Builder** - Drag-and-drop custom dashboard creation
 
 ## Persona-Based Navigation
-- **Executive (CEO)**: Executive Overview, Real-Time Risk, Compliance & Audit
-- **SOC Analyst**: Real-Time Risk, Command Center, Mustering
-- **Facilities**: Mustering, Command Center, Access Requests
-- **IT & HR**: Access Hygiene, Governance, Access Requests
-- **Compliance**: Compliance & Audit, Access Hygiene, Governance
+- **Executive (CEO)**: Executive Overview, Real-Time Risk, Compliance & Audit, Dashboard Builder
+- **SOC Analyst**: Real-Time Risk, Command Center, Mustering, Dashboard Builder
+- **Facilities**: Mustering, Command Center, Access Requests, Dashboard Builder
+- **IT & HR**: Access Hygiene, Governance, Access Requests, Dashboard Builder
+- **Compliance**: Compliance & Audit, Access Hygiene, Governance, Dashboard Builder
 
 ## Project Structure
 ```
@@ -37,7 +37,7 @@ A multi-tenant Physical Identity and Access Management (PIAM) analytics dashboar
 │   │   ├── SelfServiceAnalytics.tsx # Request funnel and SLA metrics
 │   │   ├── GovernanceView.tsx     # Entitlements & approvals
 │   │   ├── MusteringView.tsx      # Emergency mustering
-│   │   ├── GenAIView.tsx          # AI dashboard builder
+│   │   ├── GenAIView.tsx          # Drag-and-drop dashboard builder
 │   │   ├── KPICard.tsx            # Metric cards
 │   │   ├── TimeSeriesChart.tsx    # Grants vs Denies chart
 │   │   ├── MapView.tsx            # Door hotspots map
@@ -111,12 +111,12 @@ The dashboard runs via the "PIAM Dashboard" workflow on port 5000.
 - Priority missing personnel list
 - One-click call and location view
 
-### AI Builder (GenAI Demo)
-- Natural language dashboard generation
-- Real-time streaming AI response with progress phases
-- Auto-generates KPIs, charts, tables, and alert rules
-- Example prompts for quick demos
-- Uses Replit AI Integrations (no API key required)
+### Dashboard Builder
+- Drag-and-drop custom dashboard creation
+- Prebuilt report library: KPIs, Charts, Tables, Alerts
+- Click or drag to add widgets to dashboard
+- Remove widgets with X button or clear all
+- Available to all personas
 
 ## Demo Tenants
 - **Acme Corporate** - Office complex scenario
@@ -134,6 +134,7 @@ The dashboard runs via the "PIAM Dashboard" workflow on port 5000.
 - Mapbox GL (maps)
 
 ## Recent Changes
+- 2026-01-31: Replaced AI Builder with Dashboard Builder (drag-and-drop widget builder)
 - 2026-01-31: Added persona-based navigation with tab visibility per role
 - 2026-01-31: Added Executive Overview with risk KPIs and trend charts
 - 2026-01-31: Added Real-Time Risk Panel with 15s live stream toggle
