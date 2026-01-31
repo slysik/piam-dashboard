@@ -6,6 +6,7 @@ interface RealTimeRiskPanelProps {
   tenant: string;
   isStreaming: boolean;
   onToggleStream: () => void;
+  useLiveData?: boolean;
 }
 
 interface LiveEvent {
@@ -93,7 +94,7 @@ const topRiskDoors = [
   { door: 'Executive Suite D1', site: 'HQ Tower', score: 68, denies: 5 },
 ];
 
-export default function RealTimeRiskPanel({ tenant, isStreaming, onToggleStream }: RealTimeRiskPanelProps) {
+export default function RealTimeRiskPanel({ tenant, isStreaming, onToggleStream, useLiveData = false }: RealTimeRiskPanelProps) {
   const [events, setEvents] = useState<LiveEvent[]>(initialEvents);
   const [selectedIdentity, setSelectedIdentity] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'denies' | 'anomalies'>('all');

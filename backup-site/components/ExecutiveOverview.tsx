@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 interface ExecutiveOverviewProps {
   tenant: string;
+  useLiveData?: boolean;
 }
 
 const riskTrendData = [
@@ -29,7 +30,7 @@ const complianceData = [
   { name: 'Non-Compliant', value: 18, color: '#ef4444' },
 ];
 
-export default function ExecutiveOverview({ tenant }: ExecutiveOverviewProps) {
+export default function ExecutiveOverview({ tenant, useLiveData = false }: ExecutiveOverviewProps) {
   const totalIdentities = complianceData.reduce((a, b) => a + b.value, 0);
   const complianceRate = Math.round((complianceData[0].value / totalIdentities) * 100);
 

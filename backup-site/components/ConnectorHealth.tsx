@@ -1,7 +1,11 @@
 'use client';
 
+import { useConnectorHealthWithFallback } from '@/hooks/useDashboardData';
+
 interface ConnectorHealthProps {
   tenant: string;
+  useLiveData?: boolean;
+  clickhouseUrl?: string;
 }
 
 interface Connector {
@@ -43,14 +47,51 @@ const statusStyles = {
     text: 'text-red-700',
     icon: 'X',
   },
+  offline: {
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+    icon: 'X',
+  },
 };
 
-export default function ConnectorHealth({ tenant }: ConnectorHealthProps) {
-  const connectors = connectorData[tenant] || connectorData.acme;
+export default function ConnectorHealth({ tenant, useLiveData = false, clickhouseUrl }: ConnectorHealthProps) {
+  const demoConnectors = connectorData[tenant] || connectorData.acme;
+  
+  const demoDataForHook = demoConnectors.map(c => ({
+    name: c.name,
+    type: c.pacsType,
+    status: c.status as 'healthy' | 'degraded' | 'offline',
+    latency: c.latencyMs,
+    eventsPerMin: 0,
+    lastCheck: c.lastCheck,
+  }));
+
+  const { data, loading, isLive } = useConnectorHealthWithFallback(tenant, useLiveData, demoDataForHook, clickhouseUrl);
+
+  const connectors = data.map(c => ({
+    name: c.name,
+    pacsType: c.type,
+    status: c.status === 'offline' ? 'down' : c.status,
+    latencyMs: c.latency,
+    lastCheck: c.lastCheck,
+  }));
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-200">
+    <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-200 relative">
+      {isLive && (
+        <div className="absolute top-2 right-2">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">
+            <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+            Live
+          </span>
+        </div>
+      )}
       <h3 className="text-sm font-medium text-gray-600 mb-3">Connector Health</h3>
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/50 z-10 rounded-lg">
+          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -63,7 +104,7 @@ export default function ConnectorHealth({ tenant }: ConnectorHealthProps) {
           </thead>
           <tbody>
             {connectors.map((connector, idx) => {
-              const styles = statusStyles[connector.status];
+              const styles = statusStyles[connector.status as keyof typeof statusStyles] || statusStyles.healthy;
               return (
                 <tr key={idx} className="border-t border-gray-200">
                   <td className="py-2 text-gray-900">

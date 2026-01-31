@@ -196,14 +196,15 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         {activeTab === 'executive' && (
-          <ExecutiveOverview tenant={tenant} />
+          <ExecutiveOverview tenant={tenant} useLiveData={useLiveData} />
         )}
 
         {activeTab === 'risk' && (
           <RealTimeRiskPanel 
             tenant={tenant} 
             isStreaming={isStreaming} 
-            onToggleStream={() => setIsStreaming(!isStreaming)} 
+            onToggleStream={() => setIsStreaming(!isStreaming)}
+            useLiveData={useLiveData}
           />
         )}
 
@@ -247,7 +248,7 @@ export default function Dashboard() {
                 <h3 className="text-sm font-medium text-gray-600 mb-2">
                   Grants vs Denies ({timeRange === '15m' ? '15m' : timeRange === '60m' ? '1h' : '24h'})
                 </h3>
-                <TimeSeriesChart tenant={tenant} timeRange={timeRange} />
+                <TimeSeriesChart tenant={tenant} timeRange={timeRange} useLiveData={useLiveData} clickhouseUrl={clickhouseUrl} />
               </div>
               <div className="bg-white rounded-lg shadow-lg p-4 h-80 border border-gray-200">
                 <h3 className="text-sm font-medium text-gray-600 mb-2">Door Hotspots</h3>
@@ -257,7 +258,7 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <AlertsPanel alerts={alerts} />
-              <ConnectorHealth tenant={tenant} />
+              <ConnectorHealth tenant={tenant} useLiveData={useLiveData} clickhouseUrl={clickhouseUrl} />
             </div>
 
             <EventsTable events={events} onEventClick={setSelectedEvent} />
@@ -273,7 +274,7 @@ export default function Dashboard() {
         )}
 
         {activeTab === 'compliance' && (
-          <ComplianceView tenant={tenant} />
+          <ComplianceView tenant={tenant} useLiveData={useLiveData} />
         )}
 
         {activeTab === 'requests' && (

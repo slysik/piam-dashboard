@@ -5,6 +5,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 
 interface ComplianceViewProps {
   tenant: string;
+  useLiveData?: boolean;
 }
 
 interface Contractor {
@@ -76,7 +77,7 @@ const REQUIREMENT_COLORS: Record<string, string> = {
   'Certification': '#ec4899',
 };
 
-export default function ComplianceView({ tenant }: ComplianceViewProps) {
+export default function ComplianceView({ tenant, useLiveData = false }: ComplianceViewProps) {
   const [selectedContractor, setSelectedContractor] = useState<Contractor | null>(null);
   const [exporting, setExporting] = useState(false);
   const [personType, setPersonType] = useState<'all' | 'contractor'>('all');
