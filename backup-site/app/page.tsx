@@ -30,15 +30,15 @@ const allTabs = [
   { id: 'compliance', label: 'Compliance & Audit', icon: '📋' },
   { id: 'requests', label: 'Access Requests', icon: '📝' },
   { id: 'mustering', label: 'Mustering', icon: '👥' },
-  { id: 'genai', label: 'AI Builder', icon: '✨' },
+  { id: 'genai', label: 'Dashboard Builder', icon: '✨' },
 ];
 
 const personaTabs: Record<Persona, string[]> = {
-  ceo: ['executive', 'risk', 'compliance'],
-  soc: ['risk', 'command', 'mustering'],
-  facilities: ['mustering', 'command', 'requests'],
-  ithr: ['hygiene', 'governance', 'requests'],
-  compliance: ['compliance', 'hygiene', 'governance'],
+  ceo: ['executive', 'risk', 'compliance', 'genai'],
+  soc: ['risk', 'command', 'mustering', 'genai'],
+  facilities: ['mustering', 'command', 'requests', 'genai'],
+  ithr: ['hygiene', 'governance', 'requests', 'genai'],
+  compliance: ['compliance', 'hygiene', 'governance', 'genai'],
 };
 
 const personaDefaults: Record<Persona, string> = {
