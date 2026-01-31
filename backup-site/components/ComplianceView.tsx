@@ -265,7 +265,7 @@ export default function ComplianceView({ tenant, useLiveData = false }: Complian
                 <XAxis dataKey="date" fontSize={12} tick={{ fill: '#6b7280' }} />
                 <YAxis fontSize={12} tick={{ fill: '#6b7280' }} />
                 <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
-                <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Expiring" />
+                <Bar dataKey="count" fill="#f59e0b" radius={[4, 4, 0, 0]} name="Expiring" isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </div>

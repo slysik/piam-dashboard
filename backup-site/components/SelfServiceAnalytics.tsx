@@ -119,7 +119,7 @@ export default function SelfServiceAnalytics({ tenant }: SelfServiceAnalyticsPro
                 <XAxis type="number" fontSize={12} tick={{ fill: '#6b7280' }} />
                 <YAxis type="category" dataKey="status" fontSize={11} tick={{ fill: '#6b7280' }} width={120} />
                 <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                <Bar dataKey="count" radius={[0, 4, 4, 0]} isAnimationActive={false}>
                   {funnelData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
@@ -138,8 +138,8 @@ export default function SelfServiceAnalytics({ tenant }: SelfServiceAnalyticsPro
                 <XAxis dataKey="zone" fontSize={10} tick={{ fill: '#6b7280' }} angle={-15} textAnchor="end" height={60} />
                 <YAxis fontSize={12} tick={{ fill: '#6b7280' }} label={{ value: 'Hours', angle: -90, position: 'insideLeft', fontSize: 11 }} />
                 <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
-                <Bar dataKey="avgHours" fill="#3b82f6" name="Avg Hours" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="target" fill="#d1d5db" name="Target" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="avgHours" fill="#3b82f6" name="Avg Hours" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                <Bar dataKey="target" fill="#d1d5db" name="Target" radius={[4, 4, 0, 0]} isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -154,8 +154,8 @@ export default function SelfServiceAnalytics({ tenant }: SelfServiceAnalyticsPro
                 <XAxis dataKey="week" fontSize={12} tick={{ fill: '#6b7280' }} />
                 <YAxis fontSize={12} tick={{ fill: '#6b7280' }} />
                 <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }} />
-                <Line type="monotone" dataKey="requests" stroke="#3b82f6" strokeWidth={2} name="Requests" />
-                <Line type="monotone" dataKey="approved" stroke="#22c55e" strokeWidth={2} name="Approved" />
+                <Line type="monotone" dataKey="requests" stroke="#3b82f6" strokeWidth={2} name="Requests" isAnimationActive={false} />
+                <Line type="monotone" dataKey="approved" stroke="#22c55e" strokeWidth={2} name="Approved" isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>

@@ -71,8 +71,8 @@ export default function ExecutiveOverview({ tenant, useLiveData = false }: Execu
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                 />
-                <Line type="monotone" dataKey="riskScore" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#3b82f6' }} name="Risk Score" />
-                <Line type="monotone" dataKey="incidents" stroke="#ef4444" strokeWidth={2} dot={{ fill: '#ef4444' }} name="Incidents" />
+                <Line type="monotone" dataKey="riskScore" stroke="#3b82f6" strokeWidth={3} dot={{ fill: '#3b82f6' }} name="Risk Score" isAnimationActive={false} />
+                <Line type="monotone" dataKey="incidents" stroke="#ef4444" strokeWidth={2} dot={{ fill: '#ef4444' }} name="Incidents" isAnimationActive={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -89,7 +89,7 @@ export default function ExecutiveOverview({ tenant, useLiveData = false }: Execu
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                 />
-                <Bar dataKey="risk" fill="#6366f1" radius={[0, 4, 4, 0]} name="Risk Score" />
+                <Bar dataKey="risk" fill="#6366f1" radius={[0, 4, 4, 0]} name="Risk Score" isAnimationActive={false} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -110,6 +110,7 @@ export default function ExecutiveOverview({ tenant, useLiveData = false }: Execu
                   outerRadius={70}
                   paddingAngle={2}
                   dataKey="value"
+                  isAnimationActive={false}
                 >
                   {complianceData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />

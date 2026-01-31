@@ -126,12 +126,14 @@ export default function TimeSeriesChart({ tenant, timeRange = '24h', useLiveData
             strokeWidth={2}
             dot={false}
             name="Grants"
+            isAnimationActive={false}
           />
           <Line
             type="monotone"
             dataKey="denies"
             stroke="#ef4444"
             strokeWidth={2}
+            isAnimationActive={false}
             dot={false}
             name="Denies"
           />

@@ -117,7 +117,7 @@ export default function HireToRetireView({ tenant }: HireToRetireViewProps) {
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
                 />
-                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                <Bar dataKey="count" radius={[0, 4, 4, 0]} isAnimationActive={false}>
                   {matrixData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
