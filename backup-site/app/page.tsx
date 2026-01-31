@@ -116,7 +116,7 @@ export default function Dashboard() {
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Unified PIAM Analytics</h1>
+              <h1 className="text-xl font-semibold text-gray-900">ClearView Intelligence</h1>
               <p className="text-xs text-gray-500">Physical Identity & Access Management</p>
             </div>
           </div>

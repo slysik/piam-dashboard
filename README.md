@@ -1,4 +1,4 @@
-# Unified PIAM Analytics
+# ClearView Intelligence
 
 A next-generation **Physical Identity and Access Management** analytics platform designed for enterprise security operations centers. Built to unify multi-PACS environments, provide real-time threat detection, and streamline compliance workflows.
 
@@ -31,7 +31,7 @@ This platform transforms fragmented physical access control systems into a unifi
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                 Unified PIAM Analytics Platform              │
+│                 ClearView Intelligence Platform              │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
 │  │   Lenel     │  │   C-CURE    │  │     S2      │   ...        │
@@ -162,5 +162,5 @@ MIT License - See LICENSE file for details.
 ---
 
 <p align="center">
-  <strong>Unified PIAM Analytics</strong> - Unified Physical Security Intelligence
+  <strong>ClearView Intelligence</strong> - Unified Physical Security Intelligence
 </p>
