@@ -14,6 +14,39 @@ import GovernanceView from '@/components/GovernanceView';
 import ComplianceView from '@/components/ComplianceView';
 import MusteringView from '@/components/MusteringView';
 import GenAIView from '@/components/GenAIView';
+import PersonaSelector, { Persona } from '@/components/PersonaSelector';
+import ExecutiveOverview from '@/components/ExecutiveOverview';
+import RealTimeRiskPanel from '@/components/RealTimeRiskPanel';
+import HireToRetireView from '@/components/HireToRetireView';
+import SelfServiceAnalytics from '@/components/SelfServiceAnalytics';
+
+const allTabs = [
+  { id: 'executive', label: 'Executive Overview', icon: '📊' },
+  { id: 'risk', label: 'Real-Time Risk', icon: '🚨' },
+  { id: 'command', label: 'Command Center', icon: '🎯' },
+  { id: 'hygiene', label: 'Access Hygiene', icon: '🔄' },
+  { id: 'governance', label: 'Governance', icon: '🔐' },
+  { id: 'compliance', label: 'Compliance & Audit', icon: '📋' },
+  { id: 'requests', label: 'Access Requests', icon: '📝' },
+  { id: 'mustering', label: 'Mustering', icon: '👥' },
+  { id: 'genai', label: 'AI Builder', icon: '✨' },
+];
+
+const personaTabs: Record<Persona, string[]> = {
+  ceo: ['executive', 'risk', 'compliance'],
+  soc: ['risk', 'command', 'mustering'],
+  facilities: ['mustering', 'command', 'requests'],
+  ithr: ['hygiene', 'governance', 'requests'],
+  compliance: ['compliance', 'hygiene', 'governance'],
+};
+
+const personaDefaults: Record<Persona, string> = {
+  ceo: 'executive',
+  soc: 'risk',
+  facilities: 'mustering',
+  ithr: 'hygiene',
+  compliance: 'compliance',
+};
 
 const sampleKPIs = {
   acme: {
@@ -78,11 +111,13 @@ export interface Event {
 }
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState('command');
+  const [persona, setPersona] = useState<Persona>('ceo');
+  const [activeTab, setActiveTab] = useState('executive');
   const [tenant, setTenant] = useState<'acme' | 'buildright'>('acme');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [dataAge, setDataAge] = useState(12);
   const [timeRange, setTimeRange] = useState<'15m' | '60m' | '24h'>('24h');
+  const [isStreaming, setIsStreaming] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -96,14 +131,16 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    setActiveTab(personaDefaults[persona]);
+  }, [persona]);
+
   const kpis = sampleKPIs[tenant];
   const alerts = sampleAlerts[tenant];
   const events = sampleEvents[tenant];
 
-  const tenantNames: Record<string, string> = {
-    acme: 'Acme Corporate',
-    buildright: 'BuildRight Construction',
-  };
+  const visibleTabIds = personaTabs[persona];
+  const visibleTabs = allTabs.filter(tab => visibleTabIds.includes(tab.id));
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -121,6 +158,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center space-x-4">
+            <PersonaSelector value={persona} onChange={setPersona} />
             <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
               {(['15m', '60m', '24h'] as const).map((range) => (
                 <button
@@ -145,9 +183,21 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <Navigation activeTab={activeTab} onTabChange={setActiveTab} visibleTabs={visibleTabs} />
 
       <main className="max-w-7xl mx-auto px-4 py-6">
+        {activeTab === 'executive' && (
+          <ExecutiveOverview tenant={tenant} />
+        )}
+
+        {activeTab === 'risk' && (
+          <RealTimeRiskPanel 
+            tenant={tenant} 
+            isStreaming={isStreaming} 
+            onToggleStream={() => setIsStreaming(!isStreaming)} 
+          />
+        )}
+
         {activeTab === 'command' && (
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -205,12 +255,20 @@ export default function Dashboard() {
           </div>
         )}
 
+        {activeTab === 'hygiene' && (
+          <HireToRetireView tenant={tenant} />
+        )}
+
         {activeTab === 'governance' && (
           <GovernanceView tenant={tenant} />
         )}
 
         {activeTab === 'compliance' && (
           <ComplianceView tenant={tenant} />
+        )}
+
+        {activeTab === 'requests' && (
+          <SelfServiceAnalytics tenant={tenant} />
         )}
 
         {activeTab === 'mustering' && (
