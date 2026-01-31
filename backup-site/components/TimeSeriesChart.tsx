@@ -16,7 +16,6 @@ interface TimeSeriesChartProps {
   tenant: string;
   timeRange?: '15m' | '60m' | '24h';
   useLiveData?: boolean;
-  clickhouseUrl?: string;
 }
 
 function generateTimeSeriesData(tenant: string, timeRange: '15m' | '60m' | '24h' = '24h') {
@@ -78,9 +77,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export default function TimeSeriesChart({ tenant, timeRange = '24h', useLiveData = false, clickhouseUrl }: TimeSeriesChartProps) {
+export default function TimeSeriesChart({ tenant, timeRange = '24h', useLiveData = false }: TimeSeriesChartProps) {
   const demoData = generateTimeSeriesData(tenant, timeRange);
-  const { data, loading, isLive } = useTimeSeriesWithFallback(tenant, useLiveData, timeRange, demoData, clickhouseUrl);
+  const { data, loading, isLive } = useTimeSeriesWithFallback(tenant, useLiveData, timeRange, demoData);
 
   return (
     <div className="relative w-full h-full">

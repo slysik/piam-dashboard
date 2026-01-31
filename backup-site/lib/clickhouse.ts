@@ -39,24 +39,10 @@ export async function queryClickHouse<T = unknown>(
 ): Promise<T> {
   const finalConfig = { ...defaultConfig, ...config };
 
-  // Build URL with query parameters
-  const url = new URL(finalConfig.url);
-  url.searchParams.set('database', finalConfig.database);
-  url.searchParams.set('default_format', 'JSONEachRow');
-
-  // Add authentication if provided
-  if (finalConfig.username) {
-    url.searchParams.set('user', finalConfig.username);
-  }
-  if (finalConfig.password) {
-    url.searchParams.set('password', finalConfig.password);
-  }
-
   // Substitute parameters in query
   let processedQuery = query;
   if (params) {
     for (const [key, value] of Object.entries(params)) {
-      // Handle different parameter types
       const replacement =
         typeof value === 'string' ? `'${value.replace(/'/g, "\\'")}'` : String(value);
       processedQuery = processedQuery.replace(
@@ -67,35 +53,28 @@ export async function queryClickHouse<T = unknown>(
   }
 
   try {
-    const response = await fetch(url.toString(), {
+    // Use server-side API route for secure ClickHouse access
+    const response = await fetch('/api/clickhouse', {
       method: 'POST',
       headers: {
-        'Content-Type': 'text/plain',
+        'Content-Type': 'application/json',
       },
-      body: processedQuery,
+      body: JSON.stringify({
+        query: processedQuery,
+        database: finalConfig.database,
+      }),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
+      const errorData = await response.json();
       throw {
-        message: `ClickHouse query failed: ${errorText}`,
+        message: errorData.error || `ClickHouse query failed`,
         code: String(response.status),
         query: processedQuery,
       } as ClickHouseError;
     }
 
-    const text = await response.text();
-
-    // Parse JSONEachRow format (one JSON object per line)
-    if (!text.trim()) {
-      return [] as unknown as T;
-    }
-
-    const rows = text
-      .trim()
-      .split('\n')
-      .map((line) => JSON.parse(line));
-
+    const rows = await response.json();
     return rows as T;
   } catch (error) {
     if ((error as ClickHouseError).code) {

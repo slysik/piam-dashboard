@@ -5,18 +5,15 @@ import { useState, useEffect, useRef } from 'react';
 interface SettingsPanelProps {
   useLiveData: boolean;
   onToggleLiveData: (value: boolean) => void;
-  clickhouseUrl: string;
-  onClickhouseUrlChange: (value: string) => void;
 }
 
 export default function SettingsPanel({
   useLiveData,
   onToggleLiveData,
-  clickhouseUrl,
-  onClickhouseUrlChange,
 }: SettingsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [localUrl, setLocalUrl] = useState(clickhouseUrl);
+  const [connectionStatus, setConnectionStatus] = useState<'unknown' | 'connected' | 'error'>('unknown');
+  const [testing, setTesting] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,13 +26,30 @@ export default function SettingsPanel({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    setLocalUrl(clickhouseUrl);
-  }, [clickhouseUrl]);
-
-  const handleUrlSave = () => {
-    onClickhouseUrlChange(localUrl);
+  const testConnection = async () => {
+    setTesting(true);
+    try {
+      const response = await fetch('/api/clickhouse', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: 'SELECT 1' }),
+      });
+      if (response.ok) {
+        setConnectionStatus('connected');
+      } else {
+        setConnectionStatus('error');
+      }
+    } catch {
+      setConnectionStatus('error');
+    }
+    setTesting(false);
   };
+
+  useEffect(() => {
+    if (useLiveData && connectionStatus === 'unknown') {
+      testConnection();
+    }
+  }, [useLiveData, connectionStatus]);
 
   return (
     <div className="relative" ref={panelRef}>
@@ -63,7 +77,12 @@ export default function SettingsPanel({
                 <div className="text-xs text-gray-500">Toggle between demo and live data</div>
               </div>
               <button
-                onClick={() => onToggleLiveData(!useLiveData)}
+                onClick={() => {
+                  onToggleLiveData(!useLiveData);
+                  if (!useLiveData) {
+                    setConnectionStatus('unknown');
+                  }
+                }}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   useLiveData ? 'bg-blue-600' : 'bg-gray-300'
                 }`}
@@ -84,34 +103,40 @@ export default function SettingsPanel({
               }`}>
                 {useLiveData ? 'Live Data' : 'Demo Data'}
               </span>
-              {useLiveData && (
-                <span className="flex items-center text-xs text-gray-500">
+              {useLiveData && connectionStatus === 'connected' && (
+                <span className="flex items-center text-xs text-green-600">
                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse"></span>
-                  ClickHouse
+                  ClickHouse Connected
+                </span>
+              )}
+              {useLiveData && connectionStatus === 'error' && (
+                <span className="flex items-center text-xs text-red-600">
+                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1"></span>
+                  Connection Failed
+                </span>
+              )}
+              {useLiveData && testing && (
+                <span className="flex items-center text-xs text-gray-500">
+                  <span className="w-3 h-3 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin mr-1"></span>
+                  Testing...
                 </span>
               )}
             </div>
 
             {useLiveData && (
               <div className="pt-2 border-t border-gray-100">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ClickHouse URL
-                </label>
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={localUrl}
-                    onChange={(e) => setLocalUrl(e.target.value)}
-                    placeholder="http://localhost:8123"
-                    className="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <button
-                    onClick={handleUrlSave}
-                    className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
-                  >
-                    Save
-                  </button>
-                </div>
+                <button
+                  onClick={testConnection}
+                  disabled={testing}
+                  className="w-full px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg disabled:opacity-50"
+                >
+                  {testing ? 'Testing Connection...' : 'Test Connection'}
+                </button>
+                {connectionStatus === 'error' && (
+                  <p className="mt-2 text-xs text-red-600">
+                    Could not connect to ClickHouse. Using demo data as fallback.
+                  </p>
+                )}
               </div>
             )}
 
@@ -120,7 +145,7 @@ export default function SettingsPanel({
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
-                <span>Demo mode uses hardcoded sample data</span>
+                <span>{useLiveData ? 'Queries ClickHouse Cloud via server' : 'Demo mode uses hardcoded sample data'}</span>
               </div>
             </div>
           </div>

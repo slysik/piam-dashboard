@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { queryClickHouse, ClickHouseConfig } from '@/lib/clickhouse';
+import { queryClickHouse } from '@/lib/clickhouse';
 
 interface UseDashboardDataOptions<T> {
   liveQuery: string;
@@ -10,7 +10,6 @@ interface UseDashboardDataOptions<T> {
   useLiveData: boolean;
   refreshInterval?: number;
   transformLiveData?: (data: unknown[]) => T;
-  clickhouseUrl?: string;
 }
 
 interface UseDashboardDataResult<T> {
@@ -27,7 +26,6 @@ export function useDashboardData<T>({
   useLiveData,
   refreshInterval = 15000,
   transformLiveData,
-  clickhouseUrl,
 }: UseDashboardDataOptions<T>): UseDashboardDataResult<T> {
   const [data, setData] = useState<T>(demoData);
   const [loading, setLoading] = useState(false);
@@ -42,8 +40,7 @@ export function useDashboardData<T>({
 
     setLoading(true);
     try {
-      const config: Partial<ClickHouseConfig> = clickhouseUrl ? { url: clickhouseUrl } : {};
-      const result = await queryClickHouse(liveQuery, liveParams, config);
+      const result = await queryClickHouse(liveQuery, liveParams);
       if (transformLiveData) {
         setData(transformLiveData(result as unknown[]));
       } else {
@@ -57,7 +54,7 @@ export function useDashboardData<T>({
     } finally {
       setLoading(false);
     }
-  }, [useLiveData, liveQuery, liveParams, demoData, transformLiveData, clickhouseUrl]);
+  }, [useLiveData, liveQuery, liveParams, demoData, transformLiveData]);
 
   useEffect(() => {
     fetchLiveData();
@@ -123,8 +120,7 @@ export function useTimeSeriesWithFallback(
   tenant: string,
   useLiveData: boolean,
   timeRange: '15m' | '60m' | '24h',
-  demoData: Array<{ time: string; grants: number; denies: number }>,
-  clickhouseUrl?: string
+  demoData: Array<{ time: string; grants: number; denies: number }>
 ) {
   const tenantId = tenant === 'acme' ? 'acme-corp' : 'buildright-construction';
   const minutes = timeRange === '15m' ? 15 : timeRange === '60m' ? 60 : 1440;
@@ -143,7 +139,6 @@ export function useTimeSeriesWithFallback(
     demoData,
     useLiveData,
     refreshInterval: 15000,
-    clickhouseUrl,
     transformLiveData: (rows) => {
       if (rows.length === 0) return demoData;
       return rows.map((row: unknown) => {
@@ -219,8 +214,7 @@ export function useConnectorHealthWithFallback(
     latency: number;
     eventsPerMin: number;
     lastCheck: string;
-  }>,
-  clickhouseUrl?: string
+  }>
 ) {
   const tenantId = tenant === 'acme' ? 'acme-corp' : 'buildright-construction';
   
@@ -239,7 +233,6 @@ export function useConnectorHealthWithFallback(
     demoData,
     useLiveData,
     refreshInterval: 10000,
-    clickhouseUrl,
     transformLiveData: (rows) => {
       if (rows.length === 0) return demoData;
       return rows.map((row: unknown) => {

@@ -120,7 +120,6 @@ export default function Dashboard() {
   const [timeRange, setTimeRange] = useState<'15m' | '60m' | '24h'>('24h');
   const [isStreaming, setIsStreaming] = useState(false);
   const [useLiveData, setUseLiveData] = useState(false);
-  const [clickhouseUrl, setClickhouseUrl] = useState('http://localhost:8123');
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -185,9 +184,7 @@ export default function Dashboard() {
             <SettingsPanel
               useLiveData={useLiveData}
               onToggleLiveData={setUseLiveData}
-              clickhouseUrl={clickhouseUrl}
-              onClickhouseUrlChange={setClickhouseUrl}
-            />
+                          />
           </div>
         </div>
       </header>
@@ -248,7 +245,7 @@ export default function Dashboard() {
                 <h3 className="text-sm font-medium text-gray-600 mb-2">
                   Grants vs Denies ({timeRange === '15m' ? '15m' : timeRange === '60m' ? '1h' : '24h'})
                 </h3>
-                <TimeSeriesChart tenant={tenant} timeRange={timeRange} useLiveData={useLiveData} clickhouseUrl={clickhouseUrl} />
+                <TimeSeriesChart tenant={tenant} timeRange={timeRange} useLiveData={useLiveData} />
               </div>
               <div className="bg-white rounded-lg shadow-lg p-4 h-80 border border-gray-200">
                 <h3 className="text-sm font-medium text-gray-600 mb-2">Door Hotspots</h3>
@@ -258,7 +255,7 @@ export default function Dashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <AlertsPanel alerts={alerts} />
-              <ConnectorHealth tenant={tenant} useLiveData={useLiveData} clickhouseUrl={clickhouseUrl} />
+              <ConnectorHealth tenant={tenant} useLiveData={useLiveData} />
             </div>
 
             <EventsTable events={events} onEventClick={setSelectedEvent} />

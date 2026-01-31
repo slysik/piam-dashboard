@@ -5,7 +5,6 @@ import { useConnectorHealthWithFallback } from '@/hooks/useDashboardData';
 interface ConnectorHealthProps {
   tenant: string;
   useLiveData?: boolean;
-  clickhouseUrl?: string;
 }
 
 interface Connector {
@@ -54,7 +53,7 @@ const statusStyles = {
   },
 };
 
-export default function ConnectorHealth({ tenant, useLiveData = false, clickhouseUrl }: ConnectorHealthProps) {
+export default function ConnectorHealth({ tenant, useLiveData = false }: ConnectorHealthProps) {
   const demoConnectors = connectorData[tenant] || connectorData.acme;
   
   const demoDataForHook = demoConnectors.map(c => ({
@@ -66,7 +65,7 @@ export default function ConnectorHealth({ tenant, useLiveData = false, clickhous
     lastCheck: c.lastCheck,
   }));
 
-  const { data, loading, isLive } = useConnectorHealthWithFallback(tenant, useLiveData, demoDataForHook, clickhouseUrl);
+  const { data, loading, isLive } = useConnectorHealthWithFallback(tenant, useLiveData, demoDataForHook);
 
   const connectors = data.map(c => ({
     name: c.name,

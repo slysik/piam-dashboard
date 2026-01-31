@@ -43,3 +43,4 @@ build = ["npm", "run", "build", "--prefix", "backup-site"]
 
 [userenv.shared]
 NEXT_PUBLIC_MAPBOX_TOKEN = "pk.eyJ1Ijoic2x5c2lrIiwiYSI6ImNtbDB2MTB2ajAweWUzZnB5MzNzMmJqbHIifQ.ZmaOHLHXLriR8Y9fmxFTKA"
+CLICKHOUSE_URL = "https://xtqxy2540e.eastus2.azure.clickhouse.cloud:8443"
