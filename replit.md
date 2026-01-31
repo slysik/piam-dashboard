@@ -124,6 +124,52 @@ The dashboard runs via the "PIAM Dashboard" workflow on port 5000.
 
 ## Environment Variables
 - `NEXT_PUBLIC_MAPBOX_TOKEN`: Mapbox API token for full map functionality
+- `CLICKHOUSE_HOST`: ClickHouse host (default: localhost)
+- `CLICKHOUSE_PORT`: ClickHouse port (default: 8123)
+- `CLICKHOUSE_USER`: ClickHouse username
+- `CLICKHOUSE_PASSWORD`: ClickHouse password
+- `CLICKHOUSE_URL`: Full ClickHouse URL (alternative to host/port)
+
+## ClickHouse Integration
+
+### Required Views
+The dashboard queries these ClickHouse views when live data mode is enabled:
+
+| View | Purpose | Used By |
+|------|---------|---------|
+| `piam.v_kpi_current` | KPI metrics (events, deny rate, suspicious) | Command Center, Executive Overview |
+| `piam.v_timeseries_minute` | Per-minute grants/denies | Time Series Chart |
+| `piam.v_recent_events` | Recent access events | Real-Time Risk Panel |
+| `piam.v_connector_health_latest` | PACS connector status | Connector Health |
+| `piam.v_door_hotspots` | Door deny hotspots | Map View |
+| `piam.v_compliance_summary` | Compliance status | Compliance View |
+| `piam.v_freshness` | Data freshness indicator | Settings Panel |
+| `piam.v_insight_deny_spikes` | Deny spike detection | Alerts Panel |
+| `piam.v_access_hygiene` | Lifecycle exceptions | Access Hygiene (not yet wired) |
+| `piam.v_governance_entitlements` | Entitlements | Governance (not yet wired) |
+| `piam.v_access_request_funnel` | Request metrics | Self-Service (not yet wired) |
+| `piam.v_executive_risk` | Executive KPIs | Executive Overview (not yet wired) |
+
+### Components Wired to Live Data
+- ExecutiveOverview (partial - time range demos only)
+- RealTimeRiskPanel
+- TimeSeriesChart
+- ConnectorHealth
+- ComplianceView
+- MapView (door hotspots)
+
+### Components Using Demo Data Only
+- HireToRetireView
+- GovernanceView
+- SelfServiceAnalytics
+- MusteringView
+- AlertsPanel
+
+### Setup ClickHouse
+Run the schema script to create all tables and views:
+```bash
+clickhouse-client --multiquery < backup-site/scripts/clickhouse-schema.sql
+```
 
 ## Tech Stack
 - Next.js 14 with App Router
