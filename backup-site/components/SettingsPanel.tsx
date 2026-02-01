@@ -100,13 +100,20 @@ export default function SettingsPanel({
     <div className="relative" ref={panelRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-        title="Settings"
+        className={`p-2 rounded-lg transition-colors relative ${
+          trickleActive
+            ? 'text-green-600 bg-green-50 hover:bg-green-100'
+            : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+        }`}
+        title={trickleActive ? 'Live Trickle Active - Click to manage' : 'Settings'}
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className={`w-5 h-5 ${trickleActive ? 'animate-spin-slow' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
+        {trickleActive && (
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse border-2 border-white"></span>
+        )}
       </button>
 
       {isOpen && (
@@ -114,8 +121,55 @@ export default function SettingsPanel({
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
             <h3 className="font-semibold text-gray-900">Data Settings</h3>
           </div>
-          
+
           <div className="p-4 space-y-4">
+            {/* Live Trickle - Featured at top when connected */}
+            {useLiveData && connectionStatus === 'connected' && (
+              <div className="p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm font-semibold text-green-800">Real-Time Demo</span>
+                    <span className="flex items-center text-xs text-green-600">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                      Connected
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleTrickle}
+                  className={`w-full px-3 py-3 text-sm font-medium rounded-lg flex items-center justify-center space-x-2 transition-all shadow-sm ${
+                    trickleActive
+                      ? 'bg-red-500 hover:bg-red-600 text-white'
+                      : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
+                  }`}
+                >
+                  {trickleActive ? (
+                    <>
+                      <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                      <span>Stop Live Events</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Start Live Events</span>
+                    </>
+                  )}
+                </button>
+                {trickleCount > 0 && (
+                  <p className="mt-2 text-xs text-center text-green-700">
+                    {trickleCount} events generated this session
+                  </p>
+                )}
+                <p className="mt-2 text-xs text-green-600/80">
+                  Simulates real-time access events for demo purposes
+                </p>
+              </div>
+            )}
+
+            {/* Data Source Toggle */}
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-medium text-gray-900 text-sm">Data Source</div>
@@ -142,18 +196,12 @@ export default function SettingsPanel({
 
             <div className="flex items-center space-x-2">
               <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                useLiveData 
-                  ? 'bg-green-100 text-green-700' 
+                useLiveData
+                  ? 'bg-green-100 text-green-700'
                   : 'bg-amber-100 text-amber-700'
               }`}>
                 {useLiveData ? 'Live Data' : 'Demo Data'}
               </span>
-              {useLiveData && connectionStatus === 'connected' && (
-                <span className="flex items-center text-xs text-green-600">
-                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1 animate-pulse"></span>
-                  ClickHouse Connected
-                </span>
-              )}
               {useLiveData && connectionStatus === 'error' && (
                 <span className="flex items-center text-xs text-red-600">
                   <span className="w-1.5 h-1.5 bg-red-500 rounded-full mr-1"></span>
@@ -181,39 +229,6 @@ export default function SettingsPanel({
                   <p className="mt-2 text-xs text-red-600">
                     Could not connect to ClickHouse. Using demo data as fallback.
                   </p>
-                )}
-                
-                {connectionStatus === 'connected' && (
-                  <div className="pt-2">
-                    <button
-                      onClick={toggleTrickle}
-                      className={`w-full px-3 py-2.5 text-sm font-medium rounded-lg flex items-center justify-center space-x-2 transition-all ${
-                        trickleActive
-                          ? 'bg-red-500 hover:bg-red-600 text-white'
-                          : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
-                      }`}
-                    >
-                      {trickleActive ? (
-                        <>
-                          <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                          <span>Stop Live Trickle</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <span>Start Live Trickle</span>
-                        </>
-                      )}
-                    </button>
-                    {trickleCount > 0 && (
-                      <p className="mt-1.5 text-xs text-center text-gray-500">
-                        {trickleCount} events generated this session
-                      </p>
-                    )}
-                  </div>
                 )}
               </div>
             )}

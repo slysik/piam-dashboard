@@ -20,6 +20,7 @@ interface LiveEvent {
   anomalyFlags: string[];
   riskScore: number;
   hasVideo: boolean;
+  videoUrl?: string;
 }
 
 const anomalyTypes = [
@@ -47,13 +48,20 @@ const sampleDoors = [
   { door: 'Equipment Yard D1', site: 'Warehouse A' },
 ];
 
+// Sample video URLs for demo - these can be replaced with real VMS footage
+const sampleVideoUrls = [
+  '/clips/badge-access-lobby.mp4',
+  '/clips/badge-access-server-room.mp4',
+  '/clips/badge-denied-entry.mp4',
+];
+
 const generateRandomEvent = (id: number): LiveEvent => {
   const person = samplePeople[Math.floor(Math.random() * samplePeople.length)];
   const doorInfo = sampleDoors[Math.floor(Math.random() * sampleDoors.length)];
   const isDeny = Math.random() < 0.15;
   const hasAnomaly = Math.random() < 0.25;
   const anomalies: string[] = [];
-  
+
   if (hasAnomaly) {
     const numAnomalies = Math.floor(Math.random() * 2) + 1;
     for (let i = 0; i < numAnomalies; i++) {
@@ -64,6 +72,7 @@ const generateRandomEvent = (id: number): LiveEvent => {
 
   const now = new Date();
   const timestamp = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const hasVideo = Math.random() > 0.3;
 
   return {
     id: `evt-${id}-${Date.now()}`,
@@ -75,7 +84,8 @@ const generateRandomEvent = (id: number): LiveEvent => {
     result: isDeny ? 'DENY' : 'GRANT',
     anomalyFlags: anomalies,
     riskScore: anomalies.length > 0 ? Math.floor(Math.random() * 40) + 60 : Math.floor(Math.random() * 30) + 10,
-    hasVideo: Math.random() > 0.3,
+    hasVideo,
+    videoUrl: hasVideo ? sampleVideoUrls[Math.floor(Math.random() * sampleVideoUrls.length)] : undefined,
   };
 };
 
@@ -355,32 +365,61 @@ export default function RealTimeRiskPanel({ tenant, isStreaming, onToggleStream,
         <>
           <div className="fixed inset-0 bg-black/70 z-50" onClick={() => setShowVideoModal(null)} />
           <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full overflow-hidden">
+            <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden">
               <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900">Video Evidence</h3>
-                <button onClick={() => setShowVideoModal(null)} className="text-gray-500 hover:text-gray-700">✕</button>
+                <div className="flex items-center space-x-3">
+                  <h3 className="font-semibold text-gray-900">Video Evidence</h3>
+                  <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${
+                    showVideoModal.result === 'GRANT' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                  }`}>
+                    {showVideoModal.result}
+                  </span>
+                </div>
+                <button onClick={() => setShowVideoModal(null)} className="text-gray-500 hover:text-gray-700 text-xl">✕</button>
               </div>
               <div className="bg-gray-900 aspect-video flex items-center justify-center">
-                <div className="text-center text-gray-400">
-                  <svg className="w-16 h-16 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  <div className="text-sm">Video clip placeholder</div>
-                  <div className="text-xs opacity-75">(VMS integration required)</div>
-                </div>
+                {showVideoModal.videoUrl ? (
+                  <video
+                    key={showVideoModal.videoUrl}
+                    className="w-full h-full object-contain"
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                  >
+                    <source src={showVideoModal.videoUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <div className="text-center text-gray-400">
+                    <svg className="w-16 h-16 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <div className="text-sm">Video clip not available</div>
+                    <div className="text-xs opacity-75">(VMS integration required)</div>
+                  </div>
+                )}
               </div>
-              <div className="p-4 bg-gray-50 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Door:</span>
-                  <span className="text-gray-900 font-medium">{showVideoModal.door}</span>
+              <div className="p-4 bg-gray-50 grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Door:</span>
+                    <span className="text-gray-900 font-medium">{showVideoModal.door}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Site:</span>
+                    <span className="text-gray-900 font-medium">{showVideoModal.site}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Identity:</span>
-                  <span className="text-gray-900 font-medium">{showVideoModal.person}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Timestamp:</span>
-                  <span className="text-gray-900 font-medium">{showVideoModal.timestamp}</span>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Identity:</span>
+                    <span className="text-gray-900 font-medium">{showVideoModal.person}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Timestamp:</span>
+                    <span className="text-gray-900 font-medium">{showVideoModal.timestamp}</span>
+                  </div>
                 </div>
               </div>
             </div>

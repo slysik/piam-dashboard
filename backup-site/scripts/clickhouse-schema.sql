@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS piam.access_events (
     suspicious_flag UInt8 DEFAULT 0,
     anomaly_type Nullable(String),
     risk_score UInt8 DEFAULT 0,
+    video_clip_url Nullable(String),
     raw_payload String DEFAULT '{}',
     INDEX idx_tenant_time (tenant_id, event_time) TYPE minmax GRANULARITY 1
 ) ENGINE = MergeTree()
@@ -185,6 +186,7 @@ SELECT
     suspicious_flag,
     anomaly_type,
     risk_score,
+    video_clip_url,
     pacs_type,
     connector_id,
     raw_payload

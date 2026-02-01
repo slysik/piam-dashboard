@@ -33,14 +33,21 @@ export async function POST(request: NextRequest) {
         { name: 'R&D Lab', lat: 37.7760, lon: -122.4195 },
         { name: 'Cafeteria', lat: 37.7743, lon: -122.4185 },
       ];
-      
+
       const people = [
         'John Smith', 'Jane Doe', 'Bob Wilson', 'Alice Brown', 'Charlie Davis',
         'Emma Johnson', 'Michael Chen', 'Sarah Miller', 'David Garcia', 'Lisa Wang'
       ];
-      
+
       const connectors = ['lenel-01', 'ccure-01', 's2-01', 'genetec-01'];
       const pacsTypes = ['Lenel', 'C-CURE', 'S2', 'Genetec'];
+
+      // Sample video clips for demo (hosted in /public/clips or external URLs)
+      const sampleVideos = [
+        '/clips/badge-access-lobby.mp4',
+        '/clips/badge-access-server-room.mp4',
+        '/clips/badge-denied-entry.mp4',
+      ];
 
       const numEvents = 5 + Math.floor(Math.random() * 10);
       const events = [];
@@ -53,6 +60,10 @@ export async function POST(request: NextRequest) {
         const isSuspicious = !isGrant && Math.random() > 0.7;
         const anomalyTypes = ['after_hours', 'denied_streak', 'impossible_travel', 'tailgating'];
         
+        // ~70% of events have video clips
+        const hasVideo = Math.random() > 0.3;
+        const videoUrl = hasVideo ? sampleVideos[Math.floor(Math.random() * sampleVideos.length)] : null;
+
         events.push({
           tenant_id: tenant,
           person_id: `P${100 + Math.floor(Math.random() * 900)}`,
@@ -70,16 +81,17 @@ export async function POST(request: NextRequest) {
           suspicious_flag: isSuspicious ? 1 : 0,
           anomaly_type: isSuspicious ? anomalyTypes[Math.floor(Math.random() * anomalyTypes.length)] : null,
           risk_score: Math.floor(Math.random() * 100),
+          video_clip_url: videoUrl,
         });
       }
 
-      const values = events.map(e => 
-        `(generateUUIDv4(), '${e.tenant_id}', now64(3), '${e.person_id}', '${e.person_name}', '${e.badge_id}', '${e.location_id}', '${e.location_name}', '${e.door_id}', ${e.lat}, ${e.lon}, '${e.result}', ${e.deny_reason ? `'${e.deny_reason}'` : 'NULL'}, '${e.connector_id}', '${e.pacs_type}', ${e.suspicious_flag}, ${e.anomaly_type ? `'${e.anomaly_type}'` : 'NULL'}, ${e.risk_score}, '{}')`
+      const values = events.map(e =>
+        `(generateUUIDv4(), '${e.tenant_id}', now64(3), '${e.person_id}', '${e.person_name}', '${e.badge_id}', '${e.location_id}', '${e.location_name}', '${e.door_id}', ${e.lat}, ${e.lon}, '${e.result}', ${e.deny_reason ? `'${e.deny_reason}'` : 'NULL'}, '${e.connector_id}', '${e.pacs_type}', ${e.suspicious_flag}, ${e.anomaly_type ? `'${e.anomaly_type}'` : 'NULL'}, ${e.risk_score}, ${e.video_clip_url ? `'${e.video_clip_url}'` : 'NULL'}, '{}')`
       ).join(',\n');
 
       const insertQuery = `
-        INSERT INTO piam.access_events 
-        (event_id, tenant_id, event_time, person_id, person_name, badge_id, location_id, location_name, door_id, lat, lon, result, deny_reason, connector_id, pacs_type, suspicious_flag, anomaly_type, risk_score, raw_payload)
+        INSERT INTO piam.access_events
+        (event_id, tenant_id, event_time, person_id, person_name, badge_id, location_id, location_name, door_id, lat, lon, result, deny_reason, connector_id, pacs_type, suspicious_flag, anomaly_type, risk_score, video_clip_url, raw_payload)
         VALUES ${values}
       `;
 
