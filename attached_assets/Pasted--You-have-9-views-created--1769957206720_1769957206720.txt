@@ -1,0 +1,27 @@
+⏺ You have 9 views created:
+  ┌───────────────────────────┬───────────────────────────────────────────────────────┬──────────┐
+  │           View            │                        Purpose                        │  Status  │
+  ├───────────────────────────┼───────────────────────────────────────────────────────┼──────────┤
+  │ v_kpi_current             │ Dashboard KPIs (events, deny rate, suspicious counts) │ ✅ Wired │
+  ├───────────────────────────┼───────────────────────────────────────────────────────┼──────────┤
+  │ v_timeseries_minute       │ Per-minute grants/denies for charts                   │ ✅ Wired │
+  ├───────────────────────────┼───────────────────────────────────────────────────────┼──────────┤
+  │ v_recent_events           │ Recent access events with details                     │ ✅ Wired │
+  ├───────────────────────────┼───────────────────────────────────────────────────────┼──────────┤
+  │ v_recent_events_24h       │ Extended recent events (24h window)                   │ ✅ Wired │
+  ├───────────────────────────┼───────────────────────────────────────────────────────┼──────────┤
+  │ v_door_hotspots           │ Door deny hotspots for map                            │ ✅ Wired │
+  ├───────────────────────────┼───────────────────────────────────────────────────────┼──────────┤
+  │ v_connector_health_latest │ PACS connector status                                 │ ✅ Wired │
+  ├───────────────────────────┼───────────────────────────────────────────────────────┼──────────┤
+  │ v_compliance_summary      │ Compliance/training status                            │ ✅ Wired │
+  ├───────────────────────────┼───────────────────────────────────────────────────────┼──────────┤
+  │ v_freshness               │ Data age indicator                                    │ ✅ Wired │
+  ├───────────────────────────┼───────────────────────────────────────────────────────┼──────────┤
+  │ v_insight_deny_spikes     │ Anomaly/deny spike detection                          │ ✅ Wired │
+  └───────────────────────────┴───────────────────────────────────────────────────────┴──────────┘
+  Missing from your original plan:
+  - v_access_hygiene - Lifecycle exceptions
+  - v_governance_entitlements - Entitlements with approvals
+  - v_access_request_funnel - Request workflow metrics
+  - v_executive_risk - Executive-level risk KPIs
