@@ -290,7 +290,10 @@ def update_access_request(
     # Calculate time since submission for SLA
     submitted_at = request["submitted_at"]
     if isinstance(submitted_at, str):
-        submitted_at = datetime.fromisoformat(submitted_at.replace("Z", "+00:00").replace("+00:00", ""))
+        submitted_at = datetime.fromisoformat(submitted_at.replace("Z", "").replace("+00:00", ""))
+    elif hasattr(submitted_at, 'replace'):
+        # Convert timezone-aware to naive UTC
+        submitted_at = submitted_at.replace(tzinfo=None)
 
     hours_elapsed = (now - submitted_at).total_seconds() / 3600
     within_sla = 1 if hours_elapsed <= request["sla_hours"] else 0
