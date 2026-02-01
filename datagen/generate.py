@@ -532,6 +532,223 @@ def generate_compliance_status(config: dict, days: int) -> list[dict]:
     return compliance_records
 
 
+def generate_access_requests(
+    config: dict,
+    persons: list[dict],
+    locations: list[dict],
+    days: int,
+) -> list[dict]:
+    """Generate access request fact records for workflow funnel visualization."""
+    requests = []
+
+    request_types = ["new_access", "modification", "removal", "temporary"]
+    request_type_weights = [0.50, 0.25, 0.10, 0.15]  # Most are new access requests
+    access_levels = ["standard", "elevated", "temporary", "visitor"]
+    access_level_weights = [0.60, 0.20, 0.15, 0.05]
+
+    justifications = [
+        "New hire onboarding - requires access to team areas",
+        "Project assignment requires additional access",
+        "Role change - updated access requirements",
+        "Contractor engagement for Q{} project",
+        "Temporary access for maintenance window",
+        "Cross-team collaboration initiative",
+        "Security clearance upgrade approved",
+        "Emergency access for incident response",
+        "Visitor escort access needed",
+        "Training room access for workshop",
+    ]
+
+    rejection_reasons = [
+        "Insufficient justification provided",
+        "Manager approval not obtained",
+        "Background check pending",
+        "Security clearance required",
+        "Access level exceeds role requirements",
+        "Duplicate request exists",
+        "Policy violation - access denied",
+    ]
+
+    approval_notes = [
+        "Approved per standard policy",
+        "Manager verified business need",
+        "Approved with 90-day review",
+        "Approved - temporary access only",
+        "Verified with security team",
+        "Standard onboarding approval",
+    ]
+
+    end_date = datetime.utcnow()
+    start_date = end_date - timedelta(days=days)
+
+    # Build lookups
+    persons_by_tenant: dict[str, list[dict]] = {}
+    for person in persons:
+        if person["status"] == "active":
+            tenant_id = person["tenant_id"]
+            if tenant_id not in persons_by_tenant:
+                persons_by_tenant[tenant_id] = []
+            persons_by_tenant[tenant_id].append(person)
+
+    locations_by_tenant: dict[str, list[dict]] = {}
+    for loc in locations:
+        tenant_id = loc["tenant_id"]
+        if tenant_id not in locations_by_tenant:
+            locations_by_tenant[tenant_id] = []
+        locations_by_tenant[tenant_id].append(loc)
+
+    for tenant in config["tenants"]:
+        tenant_id = tenant["id"]
+        tenant_persons = persons_by_tenant.get(tenant_id, [])
+        tenant_locations = locations_by_tenant.get(tenant_id, [])
+
+        if not tenant_persons or not tenant_locations:
+            continue
+
+        # Generate ~3-8 requests per day depending on tenant size
+        base_requests_per_day = max(3, len(tenant_persons) // 50)
+
+        current_date = start_date
+        while current_date < end_date:
+            # Daily variation
+            daily_requests = int(base_requests_per_day * random.uniform(0.5, 1.5))
+
+            for _ in range(daily_requests):
+                person = random.choice(tenant_persons)
+                location = random.choice(tenant_locations)
+
+                # Requester is sometimes the person, sometimes a manager/HR
+                if random.random() < 0.7:
+                    requester = person
+                else:
+                    requester = random.choice(tenant_persons)
+
+                # Generate submission time during business hours
+                hour = random.randint(8, 17)
+                minute = random.randint(0, 59)
+                submitted_at = current_date.replace(
+                    hour=hour, minute=minute, second=random.randint(0, 59), microsecond=0
+                )
+
+                request_type = random.choices(request_types, weights=request_type_weights)[0]
+                access_level = random.choices(access_levels, weights=access_level_weights)[0]
+
+                quarter = ((current_date.month - 1) // 3) + 1
+                justification = random.choice(justifications).format(quarter)
+
+                sla_hours = random.choice([24, 48, 72])  # Standard SLAs
+
+                # Determine request status and workflow timestamps
+                # Workflow: submitted -> pending_approval -> approved/rejected -> provisioned
+                roll = random.random()
+
+                if roll < 0.08:
+                    # Still pending (8%)
+                    if random.random() < 0.5:
+                        status = "submitted"
+                    else:
+                        status = "pending_approval"
+                    approved_at = ""
+                    provisioned_at = ""
+                    rejected_at = ""
+                    approver_id = ""
+                    approval_note = ""
+                    rejection_reason = ""
+                    # Calculate SLA status for pending
+                    hours_elapsed = (end_date - submitted_at).total_seconds() / 3600
+                    within_sla = 1 if hours_elapsed <= sla_hours else 0
+
+                elif roll < 0.15:
+                    # Rejected (7%)
+                    status = "rejected"
+                    approval_delay = timedelta(hours=random.randint(1, sla_hours * 2))
+                    rejected_at = (submitted_at + approval_delay).isoformat()
+                    approved_at = ""
+                    provisioned_at = ""
+                    approver_id = random.choice(tenant_persons)["person_id"]
+                    approval_note = ""
+                    rejection_reason = random.choice(rejection_reasons)
+                    within_sla = 1 if approval_delay.total_seconds() / 3600 <= sla_hours else 0
+
+                elif roll < 0.18:
+                    # Cancelled (3%)
+                    status = "cancelled"
+                    approved_at = ""
+                    provisioned_at = ""
+                    rejected_at = ""
+                    approver_id = ""
+                    approval_note = ""
+                    rejection_reason = ""
+                    within_sla = 1  # Cancelled doesn't affect SLA
+
+                elif roll < 0.30:
+                    # Approved but not yet provisioned (12%)
+                    status = "approved"
+                    approval_delay = timedelta(hours=random.randint(1, sla_hours))
+                    approved_at = (submitted_at + approval_delay).isoformat()
+                    provisioned_at = ""
+                    rejected_at = ""
+                    approver_id = random.choice(tenant_persons)["person_id"]
+                    approval_note = random.choice(approval_notes)
+                    rejection_reason = ""
+                    within_sla = 1 if approval_delay.total_seconds() / 3600 <= sla_hours else 0
+
+                else:
+                    # Fully provisioned (70%)
+                    status = "provisioned"
+                    approval_delay = timedelta(hours=random.randint(1, sla_hours))
+                    approved_at_dt = submitted_at + approval_delay
+                    approved_at = approved_at_dt.isoformat()
+
+                    # Provisioning happens 1-4 hours after approval
+                    provision_delay = timedelta(hours=random.randint(1, 4))
+                    provisioned_at_dt = approved_at_dt + provision_delay
+                    # Don't provision in the future
+                    if provisioned_at_dt > end_date:
+                        provisioned_at_dt = end_date - timedelta(minutes=random.randint(5, 60))
+                    provisioned_at = provisioned_at_dt.isoformat()
+
+                    rejected_at = ""
+                    approver_id = random.choice(tenant_persons)["person_id"]
+                    approval_note = random.choice(approval_notes)
+                    rejection_reason = ""
+
+                    # Check if total time was within SLA
+                    total_hours = (provisioned_at_dt - submitted_at).total_seconds() / 3600
+                    within_sla = 1 if total_hours <= sla_hours else 0
+
+                requests.append(
+                    {
+                        "request_id": str(uuid4()),
+                        "tenant_id": tenant_id,
+                        "person_id": person["person_id"],
+                        "requester_id": requester["person_id"],
+                        "location_id": location["location_id"],
+                        "request_type": request_type,
+                        "access_level": access_level,
+                        "justification": justification,
+                        "status": status,
+                        "submitted_at": submitted_at.isoformat(),
+                        "approved_at": approved_at,
+                        "provisioned_at": provisioned_at,
+                        "rejected_at": rejected_at,
+                        "sla_hours": sla_hours,
+                        "within_sla": within_sla,
+                        "approver_id": approver_id,
+                        "approval_notes": approval_note,
+                        "rejection_reason": rejection_reason,
+                        "created_at": submitted_at.isoformat(),
+                        "updated_at": datetime.utcnow().isoformat(),
+                    }
+                )
+
+            current_date += timedelta(days=1)
+
+    # Sort by submission time
+    requests.sort(key=lambda x: x["submitted_at"])
+    return requests
+
+
 # =============================================================================
 # Main
 # =============================================================================
@@ -747,6 +964,35 @@ def main():
         ],
     )
     print(f"  Compliance Status: {count}")
+
+    access_requests = generate_access_requests(config, persons, locations, days)
+    count = write_csv(
+        os.path.join(output_path, "fact_access_requests.csv"),
+        access_requests,
+        [
+            "request_id",
+            "tenant_id",
+            "person_id",
+            "requester_id",
+            "location_id",
+            "request_type",
+            "access_level",
+            "justification",
+            "status",
+            "submitted_at",
+            "approved_at",
+            "provisioned_at",
+            "rejected_at",
+            "sla_hours",
+            "within_sla",
+            "approver_id",
+            "approval_notes",
+            "rejection_reason",
+            "created_at",
+            "updated_at",
+        ],
+    )
+    print(f"  Access Requests: {count}")
 
     print("\n--- Summary ---")
     print(f"Generated data for {len(config['tenants'])} tenants")

@@ -81,9 +81,9 @@ generate: ## Generate synthetic data and load into ClickHouse
 	@echo "✅ Data generation complete!"
 	@echo "   Run 'make trickle' to start live event stream"
 
-trickle: ## Start live event trickle (Ctrl+C to stop)
-	@echo "Starting live event stream..."
-	@cd datagen && python3 trickle_simple.py --interval 5 --events-per-batch 5 --deny-rate 0.25
+trickle: ## Start live event & request trickle (Ctrl+C to stop)
+	@echo "Starting live data stream (events + requests)..."
+	@cd datagen && python3 trickle_simple.py --interval 3 --events-per-batch 5 --deny-rate 0.25
 
 replay: ## Load incident replay window (guaranteed incidents)
 	@echo "Loading incident replay window..."

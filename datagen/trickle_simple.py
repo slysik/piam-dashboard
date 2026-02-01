@@ -2,8 +2,8 @@
 """
 PIAM Dashboard - Simple Trickle Data Generator
 
-Generates and inserts realistic access events into ClickHouse.
-Works with the current schema (dim_person, dim_location).
+Generates and inserts realistic access events and access requests into ClickHouse.
+Works with the current schema (dim_person, dim_location, fact_access_requests).
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import random
 import signal
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
@@ -20,6 +20,41 @@ import clickhouse_connect
 
 # Global flag for graceful shutdown
 running = True
+
+# Access request constants
+REQUEST_TYPES = ["new_access", "modification", "removal", "temporary"]
+REQUEST_TYPE_WEIGHTS = [0.50, 0.25, 0.10, 0.15]
+ACCESS_LEVELS = ["standard", "elevated", "temporary", "visitor"]
+ACCESS_LEVEL_WEIGHTS = [0.60, 0.20, 0.15, 0.05]
+
+JUSTIFICATIONS = [
+    "New hire onboarding - requires access to team areas",
+    "Project assignment requires additional access",
+    "Role change - updated access requirements",
+    "Contractor engagement for current project",
+    "Temporary access for maintenance window",
+    "Cross-team collaboration initiative",
+    "Security clearance upgrade approved",
+    "Emergency access for incident response",
+    "Visitor escort access needed",
+    "Training room access for workshop",
+]
+
+REJECTION_REASONS = [
+    "Insufficient justification provided",
+    "Manager approval not obtained",
+    "Background check pending",
+    "Security clearance required",
+    "Access level exceeds role requirements",
+]
+
+APPROVAL_NOTES = [
+    "Approved per standard policy",
+    "Manager verified business need",
+    "Approved with 90-day review",
+    "Approved - temporary access only",
+    "Verified with security team",
+]
 
 
 def signal_handler(signum, frame):
@@ -150,13 +185,193 @@ def insert_events(client: clickhouse_connect.driver.Client, events: list[dict[st
     client.insert("piam.fact_access_events", rows, column_names=column_names)
 
 
+# =============================================================================
+# Access Request Functions
+# =============================================================================
+
+
+def generate_access_request(ref_data: dict[str, Any]) -> dict[str, Any] | None:
+    """Generate a new access request."""
+    if not ref_data["persons"] or not ref_data["locations"]:
+        return None
+
+    # Pick random person and matching location
+    person = random.choice(ref_data["persons"])
+    tenant_id = person["tenant_id"]
+
+    tenant_locations = [l for l in ref_data["locations"] if l["tenant_id"] == tenant_id]
+    if not tenant_locations:
+        return None
+
+    location = random.choice(tenant_locations)
+
+    # Requester is sometimes the person, sometimes someone else
+    if random.random() < 0.7:
+        requester = person
+    else:
+        tenant_persons = [p for p in ref_data["persons"] if p["tenant_id"] == tenant_id]
+        requester = random.choice(tenant_persons) if tenant_persons else person
+
+    now = datetime.utcnow()
+
+    return {
+        "request_id": str(uuid4()),
+        "tenant_id": tenant_id,
+        "person_id": person["person_id"],
+        "requester_id": requester["person_id"],
+        "location_id": location["location_id"],
+        "request_type": random.choices(REQUEST_TYPES, weights=REQUEST_TYPE_WEIGHTS)[0],
+        "access_level": random.choices(ACCESS_LEVELS, weights=ACCESS_LEVEL_WEIGHTS)[0],
+        "justification": random.choice(JUSTIFICATIONS),
+        "status": "submitted",
+        "submitted_at": now,
+        "approved_at": None,
+        "provisioned_at": None,
+        "rejected_at": None,
+        "sla_hours": random.choice([24, 48, 72]),
+        "within_sla": 1,
+        "approver_id": None,
+        "approval_notes": None,
+        "rejection_reason": None,
+        "created_at": now,
+        "updated_at": now,
+    }
+
+
+def insert_access_request(client: clickhouse_connect.driver.Client, request: dict[str, Any]) -> None:
+    """Insert a new access request into ClickHouse."""
+    column_names = [
+        "request_id", "tenant_id", "person_id", "requester_id", "location_id",
+        "request_type", "access_level", "justification", "status",
+        "submitted_at", "approved_at", "provisioned_at", "rejected_at",
+        "sla_hours", "within_sla", "approver_id", "approval_notes", "rejection_reason",
+        "created_at", "updated_at"
+    ]
+
+    row = [[request[col] for col in column_names]]
+    client.insert("piam.fact_access_requests", row, column_names=column_names)
+
+
+def fetch_pending_requests(client: clickhouse_connect.driver.Client, limit: int = 50) -> list[dict[str, Any]]:
+    """Fetch pending access requests that can be updated."""
+    result = client.query(f"""
+        SELECT request_id, tenant_id, person_id, status, submitted_at, sla_hours
+        FROM piam.fact_access_requests FINAL
+        WHERE status IN ('submitted', 'pending_approval', 'approved')
+        ORDER BY submitted_at ASC
+        LIMIT {limit}
+    """)
+
+    requests = []
+    for row in result.result_rows:
+        requests.append({
+            "request_id": row[0],
+            "tenant_id": row[1],
+            "person_id": row[2],
+            "status": row[3],
+            "submitted_at": row[4],
+            "sla_hours": row[5],
+        })
+    return requests
+
+
+def update_access_request(
+    client: clickhouse_connect.driver.Client,
+    request: dict[str, Any],
+    ref_data: dict[str, Any]
+) -> str | None:
+    """
+    Progress a pending request through the workflow.
+    Returns the new status or None if no update.
+    """
+    current_status = request["status"]
+    now = datetime.utcnow()
+
+    # Calculate time since submission for SLA
+    submitted_at = request["submitted_at"]
+    if isinstance(submitted_at, str):
+        submitted_at = datetime.fromisoformat(submitted_at.replace("Z", "+00:00").replace("+00:00", ""))
+
+    hours_elapsed = (now - submitted_at).total_seconds() / 3600
+    within_sla = 1 if hours_elapsed <= request["sla_hours"] else 0
+
+    # Find an approver from same tenant
+    tenant_persons = [p for p in ref_data["persons"] if p["tenant_id"] == request["tenant_id"]]
+    approver_id = random.choice(tenant_persons)["person_id"] if tenant_persons else None
+
+    new_status = None
+    approved_at = None
+    provisioned_at = None
+    rejected_at = None
+    approval_notes = None
+    rejection_reason = None
+
+    if current_status == "submitted":
+        # Move to pending_approval (80%) or stay submitted (20%)
+        if random.random() < 0.8:
+            new_status = "pending_approval"
+
+    elif current_status == "pending_approval":
+        # Approve (70%), reject (15%), or stay pending (15%)
+        roll = random.random()
+        if roll < 0.70:
+            new_status = "approved"
+            approved_at = now
+            approval_notes = random.choice(APPROVAL_NOTES)
+        elif roll < 0.85:
+            new_status = "rejected"
+            rejected_at = now
+            rejection_reason = random.choice(REJECTION_REASONS)
+
+    elif current_status == "approved":
+        # Provision (85%) or stay approved (15%)
+        if random.random() < 0.85:
+            new_status = "provisioned"
+            provisioned_at = now
+
+    if new_status is None:
+        return None
+
+    # Insert updated record (ReplacingMergeTree will handle dedup)
+    client.command(f"""
+        INSERT INTO piam.fact_access_requests
+        SELECT
+            request_id,
+            tenant_id,
+            person_id,
+            requester_id,
+            location_id,
+            request_type,
+            access_level,
+            justification,
+            '{new_status}' as status,
+            submitted_at,
+            {f"toDateTime64('{approved_at.isoformat()}', 3)" if approved_at else "approved_at"} as approved_at,
+            {f"toDateTime64('{provisioned_at.isoformat()}', 3)" if provisioned_at else "provisioned_at"} as provisioned_at,
+            {f"toDateTime64('{rejected_at.isoformat()}', 3)" if rejected_at else "rejected_at"} as rejected_at,
+            sla_hours,
+            {within_sla} as within_sla,
+            {f"'{approver_id}'" if approver_id else "approver_id"} as approver_id,
+            {f"'{approval_notes}'" if approval_notes else "approval_notes"} as approval_notes,
+            {f"'{rejection_reason}'" if rejection_reason else "rejection_reason"} as rejection_reason,
+            created_at,
+            now64(3) as updated_at
+        FROM piam.fact_access_requests FINAL
+        WHERE request_id = '{request["request_id"]}'
+    """)
+
+    return new_status
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Trickle synthetic access events into ClickHouse")
+    parser = argparse.ArgumentParser(description="Trickle synthetic access events and requests into ClickHouse")
     parser.add_argument("--host", type=str, default="localhost", help="ClickHouse host")
     parser.add_argument("--port", type=int, default=8123, help="ClickHouse HTTP port")
-    parser.add_argument("--interval", type=int, default=5, help="Seconds between batches")
-    parser.add_argument("--events-per-batch", type=int, default=10, help="Events per batch")
+    parser.add_argument("--interval", type=int, default=3, help="Seconds between batches (default: 3)")
+    parser.add_argument("--events-per-batch", type=int, default=5, help="Access events per batch")
     parser.add_argument("--deny-rate", type=float, default=0.25, help="Deny rate (0.0-1.0)")
+    parser.add_argument("--request-rate", type=float, default=0.3, help="Chance of new request per batch (0.0-1.0)")
+    parser.add_argument("--no-requests", action="store_true", help="Disable access request trickling")
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, signal_handler)
@@ -186,7 +401,8 @@ def main():
         sys.exit(1)
 
     print(f"\nStarting trickle mode:")
-    print(f"  Batch size: {args.events_per_batch} events")
+    print(f"  Access events: {args.events_per_batch}/batch")
+    print(f"  Access requests: {'disabled' if args.no_requests else f'{args.request_rate:.0%} chance/batch'}")
     print(f"  Interval: {args.interval}s")
     print(f"  Deny rate: {args.deny_rate:.0%}")
     print("Press Ctrl+C to stop.\n")
@@ -194,9 +410,15 @@ def main():
     total_events = 0
     total_grants = 0
     total_denies = 0
+    total_requests_new = 0
+    total_requests_updated = 0
+    batch_count = 0
 
     while running:
         try:
+            batch_count += 1
+
+            # --- Access Events ---
             events = []
             for _ in range(args.events_per_batch):
                 event = generate_event(ref_data, args.deny_rate)
@@ -211,21 +433,48 @@ def main():
                 insert_events(client, events)
                 total_events += len(events)
 
-                timestamp = datetime.utcnow().strftime("%H:%M:%S")
-                grants = sum(1 for e in events if e["result"] == "grant")
-                denies = len(events) - grants
-                suspicious = sum(1 for e in events if e["suspicious_flag"])
+            # --- Access Requests (if enabled) ---
+            request_info = ""
+            if not args.no_requests:
+                # Maybe create a new request
+                if random.random() < args.request_rate:
+                    new_request = generate_access_request(ref_data)
+                    if new_request:
+                        insert_access_request(client, new_request)
+                        total_requests_new += 1
+                        request_info += " +1 req"
 
-                print(f"[{timestamp}] +{len(events)} events (G:{grants} D:{denies} S:{suspicious}) | Total: {total_events}")
+                # Update some pending requests (every 3rd batch)
+                if batch_count % 3 == 0:
+                    pending = fetch_pending_requests(client, limit=10)
+                    updates = 0
+                    for req in pending[:3]:  # Update up to 3 per cycle
+                        new_status = update_access_request(client, req, ref_data)
+                        if new_status:
+                            updates += 1
+                            total_requests_updated += 1
+                    if updates:
+                        request_info += f" {updates} req→"
+
+            # --- Output ---
+            timestamp = datetime.utcnow().strftime("%H:%M:%S")
+            grants = sum(1 for e in events if e["result"] == "grant")
+            denies = len(events) - grants
+            suspicious = sum(1 for e in events if e["suspicious_flag"])
+
+            print(f"[{timestamp}] +{len(events)} events (G:{grants} D:{denies} S:{suspicious}){request_info} | Total: {total_events} events")
 
             time.sleep(args.interval)
 
         except Exception as e:
             print(f"Error: {e}")
+            import traceback
+            traceback.print_exc()
             time.sleep(args.interval)
 
     print(f"\n--- Summary ---")
-    print(f"Total: {total_events} | Grants: {total_grants} | Denies: {total_denies}")
+    print(f"Access Events: {total_events} (Grants: {total_grants}, Denies: {total_denies})")
+    print(f"Access Requests: {total_requests_new} new, {total_requests_updated} updated")
 
 
 if __name__ == "__main__":

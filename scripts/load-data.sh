@@ -30,6 +30,7 @@ load_table "dim_entitlement"
 load_table "fact_access_events"
 load_table "fact_connector_health"
 load_table "fact_compliance_status"
+load_table "fact_access_requests"
 
 # Show counts
 echo ""
@@ -40,6 +41,7 @@ UNION ALL SELECT 'dim_site', count() FROM dim_site
 UNION ALL SELECT 'dim_location', count() FROM dim_location
 UNION ALL SELECT 'dim_person', count() FROM dim_person
 UNION ALL SELECT 'fact_access_events', count() FROM fact_access_events
+UNION ALL SELECT 'fact_access_requests', count() FROM fact_access_requests
 FORMAT PrettyCompact
 "
 
