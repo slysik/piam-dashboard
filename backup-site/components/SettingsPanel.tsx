@@ -5,15 +5,20 @@ import { useState, useEffect, useRef } from 'react';
 interface SettingsPanelProps {
   useLiveData: boolean;
   onToggleLiveData: (value: boolean) => void;
+  tenant?: string;
 }
 
 export default function SettingsPanel({
   useLiveData,
   onToggleLiveData,
+  tenant = 'acme',
 }: SettingsPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'unknown' | 'connected' | 'error'>('unknown');
   const [testing, setTesting] = useState(false);
+  const [trickleActive, setTrickleActive] = useState(false);
+  const [trickleCount, setTrickleCount] = useState(0);
+  const trickleIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,6 +55,46 @@ export default function SettingsPanel({
       testConnection();
     }
   }, [useLiveData, connectionStatus]);
+
+  const tenantId = tenant === 'acme' ? 'acme-corp' : 'buildright-construction';
+
+  const triggerTrickle = async () => {
+    try {
+      const response = await fetch('/api/trickle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'start', tenant: tenantId }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTrickleCount(prev => prev + (data.eventsInserted || 0));
+      }
+    } catch (err) {
+      console.error('Trickle failed:', err);
+    }
+  };
+
+  const toggleTrickle = () => {
+    if (trickleActive) {
+      if (trickleIntervalRef.current) {
+        clearInterval(trickleIntervalRef.current);
+        trickleIntervalRef.current = null;
+      }
+      setTrickleActive(false);
+    } else {
+      triggerTrickle();
+      trickleIntervalRef.current = setInterval(triggerTrickle, 3000);
+      setTrickleActive(true);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (trickleIntervalRef.current) {
+        clearInterval(trickleIntervalRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="relative" ref={panelRef}>
@@ -124,7 +169,7 @@ export default function SettingsPanel({
             </div>
 
             {useLiveData && (
-              <div className="pt-2 border-t border-gray-100">
+              <div className="pt-2 border-t border-gray-100 space-y-2">
                 <button
                   onClick={testConnection}
                   disabled={testing}
@@ -136,6 +181,39 @@ export default function SettingsPanel({
                   <p className="mt-2 text-xs text-red-600">
                     Could not connect to ClickHouse. Using demo data as fallback.
                   </p>
+                )}
+                
+                {connectionStatus === 'connected' && (
+                  <div className="pt-2">
+                    <button
+                      onClick={toggleTrickle}
+                      className={`w-full px-3 py-2.5 text-sm font-medium rounded-lg flex items-center justify-center space-x-2 transition-all ${
+                        trickleActive
+                          ? 'bg-red-500 hover:bg-red-600 text-white'
+                          : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white'
+                      }`}
+                    >
+                      {trickleActive ? (
+                        <>
+                          <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                          <span>Stop Live Trickle</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>Start Live Trickle</span>
+                        </>
+                      )}
+                    </button>
+                    {trickleCount > 0 && (
+                      <p className="mt-1.5 text-xs text-center text-gray-500">
+                        {trickleCount} events generated this session
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             )}

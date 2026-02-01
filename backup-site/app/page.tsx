@@ -184,7 +184,8 @@ export default function Dashboard() {
             <SettingsPanel
               useLiveData={useLiveData}
               onToggleLiveData={setUseLiveData}
-                          />
+              tenant={tenant}
+            />
           </div>
         </div>
       </header>

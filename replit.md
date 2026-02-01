@@ -171,6 +171,14 @@ Run the schema script to create all tables and views:
 clickhouse-client --multiquery < backup-site/scripts/clickhouse-schema.sql
 ```
 
+### Live Demo Trickle
+When connected to live ClickHouse data, use the "Start Live Trickle" button in Settings to simulate real-time events:
+1. Click the gear icon (Settings) in the header
+2. Toggle "Live Data" on and verify connection
+3. Click "Start Live Trickle" - inserts 5-15 random events every 3 seconds
+4. Click "Stop Live Trickle" to pause event generation
+5. Watch events appear in Real-Time Risk panel and charts update
+
 ## Tech Stack
 - Next.js 14 with App Router
 - React 18
