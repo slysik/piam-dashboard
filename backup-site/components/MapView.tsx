@@ -1,9 +1,45 @@
+/**
+ * MapView - Geographic Door Access Heatmap Visualization
+ *
+ * This component renders an interactive map showing the geographic distribution
+ * of access points and their deny rates. Each door is represented as a marker
+ * with size and color intensity based on the number and rate of access denials,
+ * enabling spatial analysis of security hotspots.
+ *
+ * @component
+ * @example
+ * <MapView tenant="acme" />
+ * <MapView tenant="buildright" />
+ *
+ * Architecture Notes:
+ * - Uses Mapbox GL JS for interactive mapping when NEXT_PUBLIC_MAPBOX_TOKEN is set
+ * - Graceful fallback to simple visual representation when token unavailable
+ * - Marker size scales with deny count: min 20px, max 40px based on denies
+ * - Marker opacity scales with deny rate: 0.4 to 1.0 based on denyRate/20
+ * - Popups display door name, deny count, and deny rate percentage
+ * - Map automatically flies to new center when tenant changes
+ * - useCallback hooks prevent unnecessary marker recreations
+ * - Cleanup functions properly remove markers and map instances
+ *
+ * Data Flow:
+ * - tenant prop selects door data from sampleDoors record
+ * - Each tenant has different geographic coordinates (acme: downtown, buildright: industrial)
+ * - mapboxToken state checked on mount from environment variable
+ * - markersRef maintains references for cleanup and updates
+ * - flyTo animation transitions map between tenant locations
+ *
+ * @param {MapViewProps} props - Component props
+ * @param {string} props.tenant - The tenant identifier to load door locations
+ */
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
+/**
+ * Door location and deny statistics for map visualization
+ */
 interface DoorData {
   id: string;
   name: string;

@@ -1,5 +1,46 @@
+/**
+ * Navigation - Dashboard Tab Navigation Component
+ *
+ * This component renders a horizontal tab bar for navigating between
+ * different dashboard views. It supports dynamic tab visibility based
+ * on user persona and provides visual indication of the active tab
+ * with an underline accent and background highlight.
+ *
+ * @component
+ * @example
+ * <Navigation
+ *   activeTab="overview"
+ *   onTabChange={(tabId) => setActiveTab(tabId)}
+ *   visibleTabs={[
+ *     { id: 'overview', label: 'Overview', icon: '📊' },
+ *     { id: 'events', label: 'Events', icon: '📋' }
+ *   ]}
+ * />
+ *
+ * Architecture Notes:
+ * - Tab visibility controlled by parent based on user persona/permissions
+ * - Active tab indicated by blue border-bottom, text color, and background
+ * - Icons appear before label text using emoji characters
+ * - Consistent padding and spacing for touch-friendly click targets
+ * - White background with bottom border matches dashboard design system
+ * - Full-width container with horizontal padding for edge spacing
+ *
+ * Data Flow:
+ * - visibleTabs: Array of Tab objects filtered by parent based on persona
+ * - activeTab: String ID of currently selected tab from parent state
+ * - onTabChange: Callback to notify parent when user clicks a different tab
+ * - Parent typically uses this to conditionally render view components
+ *
+ * @param {NavigationProps} props - Component props
+ * @param {string} props.activeTab - ID of the currently active tab
+ * @param {(tab: string) => void} props.onTabChange - Callback when tab is clicked
+ * @param {Tab[]} props.visibleTabs - Array of tabs to display
+ */
 'use client';
 
+/**
+ * Tab configuration for navigation
+ */
 interface Tab {
   id: string;
   label: string;

@@ -3,7 +3,21 @@
 PIAM Dashboard - Trickle Data Generator
 
 Continuously generates and inserts realistic access events into ClickHouse
-to simulate live data streaming.
+to simulate live data streaming. This module connects to an existing ClickHouse
+instance with pre-loaded dimension data and generates synthetic access events
+at a configurable rate.
+
+The generator fetches reference data (persons, locations, entitlements) from
+ClickHouse, then creates realistic access events based on entitlement rules
+and configurable deny rates.
+
+Usage:
+    python trickle.py --host localhost --port 8123 --interval 5 --batch-size 10
+    python trickle.py --config config.yaml --seed 42
+
+Dependencies:
+    - clickhouse-connect: ClickHouse Python driver
+    - PyYAML: Configuration file parsing
 """
 from __future__ import annotations
 
@@ -24,27 +38,80 @@ import yaml
 running = True
 
 
-def signal_handler(signum, frame):
-    """Handle shutdown signals gracefully."""
+def signal_handler(signum: int, frame: Any) -> None:
+    """
+    Handle shutdown signals gracefully.
+
+    Sets the global running flag to False, allowing the main loop to
+    complete its current batch before exiting cleanly.
+
+    Args:
+        signum: The signal number received (e.g., SIGINT, SIGTERM).
+        frame: The current stack frame (unused but required by signal API).
+    """
     global running
     print("\nShutdown signal received. Finishing current batch...")
     running = False
 
 
 def load_config(config_path: str) -> dict[str, Any]:
-    """Load configuration from YAML file."""
+    """
+    Load configuration from YAML file.
+
+    Args:
+        config_path: Path to the YAML configuration file.
+
+    Returns:
+        Dictionary containing the parsed configuration with tenant settings,
+        deny reasons, and other generation parameters.
+
+    Raises:
+        FileNotFoundError: If the configuration file does not exist.
+        yaml.YAMLError: If the YAML file is malformed.
+    """
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
 
 
 def get_clickhouse_client(host: str, port: int) -> clickhouse_connect.driver.Client:
-    """Create ClickHouse client connection."""
+    """
+    Create ClickHouse client connection.
+
+    Args:
+        host: ClickHouse server hostname or IP address.
+        port: ClickHouse HTTP interface port (typically 8123).
+
+    Returns:
+        Connected ClickHouse client instance.
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If connection fails.
+    """
     return clickhouse_connect.get_client(host=host, port=port)
 
 
 def fetch_reference_data(client: clickhouse_connect.driver.Client) -> dict[str, Any]:
-    """Fetch reference data from ClickHouse for event generation."""
-    ref_data = {"persons": [], "locations": [], "tenants": {}}
+    """
+    Fetch reference data from ClickHouse for event generation.
+
+    Queries the dimension tables to retrieve active persons, locations,
+    and entitlements. This data is used to generate realistic access
+    events that respect tenant boundaries and access rights.
+
+    Args:
+        client: Connected ClickHouse client instance.
+
+    Returns:
+        Dictionary containing:
+            - persons: List of active person records with badges
+            - locations: List of location/door records
+            - entitlements: Set of (person_id, location_id) tuples for access checks
+            - tenants: Dict mapping tenant_id to their persons and locations
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If queries fail.
+    """
+    ref_data: dict[str, Any] = {"persons": [], "locations": [], "tenants": {}}
 
     # Fetch active persons
     persons_result = client.query(
@@ -113,7 +180,28 @@ def fetch_reference_data(client: clickhouse_connect.driver.Client) -> dict[str, 
 def generate_event(
     ref_data: dict[str, Any], config: dict[str, Any]
 ) -> dict[str, Any] | None:
-    """Generate a single realistic access event."""
+    """
+    Generate a single realistic access event.
+
+    Creates an access event by randomly selecting a tenant (weighted by
+    person count), then a person and location within that tenant. The
+    event result (grant/deny) is determined by checking entitlements
+    and applying the configured deny rate.
+
+    Args:
+        ref_data: Reference data dictionary from fetch_reference_data().
+        config: Configuration dictionary with tenant settings and deny reasons.
+
+    Returns:
+        Dictionary containing the access event fields, or None if no valid
+        tenant/person/location combination is available. Event fields include:
+            - event_id: Unique UUID for the event
+            - tenant_id, person_id, location_id: Foreign keys
+            - event_time: UTC timestamp of the event
+            - result: "grant" or "deny"
+            - deny_reason: Reason code if denied, empty string if granted
+            - suspicious: Boolean flag for anomalous events (0.3% chance)
+    """
     if not ref_data["tenants"]:
         return None
 
@@ -183,7 +271,21 @@ def generate_event(
 def insert_events(
     client: clickhouse_connect.driver.Client, events: list[dict[str, Any]]
 ) -> None:
-    """Insert events into ClickHouse."""
+    """
+    Insert events into ClickHouse.
+
+    Batch inserts access events into the piam.fact_access_events table.
+    Uses the clickhouse-connect client's insert method for efficient
+    bulk loading.
+
+    Args:
+        client: Connected ClickHouse client instance.
+        events: List of event dictionaries to insert. Each event must
+            contain all required columns for fact_access_events.
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If insert fails.
+    """
     if not events:
         return
 
@@ -222,7 +324,17 @@ def insert_events(
     client.insert("piam.fact_access_events", rows, column_names=column_names)
 
 
-def main():
+def main() -> None:
+    """
+    Main entry point for the trickle data generator.
+
+    Parses command-line arguments, establishes ClickHouse connection,
+    fetches reference data, and runs the continuous event generation
+    loop until interrupted by SIGINT or SIGTERM.
+
+    The main loop generates batches of events at configurable intervals,
+    tracking and reporting statistics for grants, denies, and total events.
+    """
     parser = argparse.ArgumentParser(
         description="Trickle synthetic access events into ClickHouse"
     )
@@ -305,7 +417,7 @@ def main():
         sys.exit(1)
 
     # Start trickle loop
-    print(f"\nStarting trickle mode:")
+    print("\nStarting trickle mode:")
     print(f"  Batch size: {args.batch_size} events")
     print(f"  Interval: {args.interval} seconds")
     print("Press Ctrl+C to stop.\n")
@@ -350,7 +462,7 @@ def main():
             print(f"Error during event generation/insertion: {e}")
             time.sleep(args.interval)
 
-    print(f"\n--- Final Summary ---")
+    print("\n--- Final Summary ---")
     print(f"Total events inserted: {total_events}")
     print(f"Total grants: {total_grants}")
     print(f"Total denies: {total_denies}")

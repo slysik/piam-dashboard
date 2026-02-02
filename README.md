@@ -1,23 +1,87 @@
 # ClearView Intelligence
 
-A next-generation **Physical Identity and Access Management** analytics platform designed for enterprise security operations centers. Built to unify multi-PACS environments, provide real-time threat detection, and streamline compliance workflows.
+**Unified Physical Security Intelligence for the Modern Enterprise**
 
-![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=flat-square&logo=typescript)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8?style=flat-square&logo=tailwindcss)
+![Next.js](https://img.shields.io/badge/Next.js_14-black?style=flat-square&logo=next.js)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![ClickHouse](https://img.shields.io/badge/ClickHouse-FFCC01?style=flat-square&logo=clickhouse&logoColor=black)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38bdf8?style=flat-square&logo=tailwindcss&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
 ---
 
-## Overview
+### Why This Exists
 
-This platform transforms fragmented physical access control systems into a unified security intelligence platform. Whether you're managing a single corporate campus or hundreds of construction sites, it provides the visibility, governance, and compliance tools you need.
+Modern enterprises run 3-6 different Physical Access Control Systems across their facilities. Security teams waste hours switching between Lenel, C-CURE, S2, and Genetec consoles. Auditors demand evidence chains. Deny spikes go unnoticed. Terminated employees keep their badges.
 
-### Key Capabilities
+**ClearView Intelligence solves this.** One dashboard. All PACS. Real-time analytics. Complete audit trails.
+
+---
+
+## Quick Navigation for Reviewers
+
+| Resource | Description |
+|----------|-------------|
+| [Demo Guide](docs/demo/README.md) | 15-minute presentation flow |
+| [Architecture Deep-Dive](docs/ARCHITECTURE.md) | Technical documentation |
+| [Interactive Diagram](backup-site/public/architecture.html) | Visual architecture presentation |
+
+---
+
+## Architecture Overview
+
+```
++==================================================================================+
+|                         ClearView Intelligence Platform                           |
++==================================================================================+
+
+                            PACS CONNECTOR LAYER
+    +-------------+    +-------------+    +-------------+    +-------------+
+    |   Lenel     |    |   C-CURE    |    |     S2      |    |  Genetec    |
+    | OnGuard     |    |   9000      |    |  NetBox     |    |  Synergis   |
+    +------+------+    +------+------+    +------+------+    +------+------+
+           |                  |                  |                  |
+           +------------------+------------------+------------------+
+                                      |
+                              [Event Ingestion]
+                                      v
++==================================================================================+
+|                        CLICKHOUSE OLAP DATABASE                                   |
+|----------------------------------------------------------------------------------|
+|  Dimension Tables     |  Fact Tables           |  Materialized Views             |
+|  - dim_tenant         |  - fact_access_events  |  - v_kpi_current (15s)          |
+|  - dim_site           |  - fact_connector_health|  - v_timeseries_minute (15s)    |
+|  - dim_person         |  - fact_compliance     |  - v_door_hotspots (30s)        |
+|  - dim_entitlement    |                        |  - v_recent_events (5s)         |
++==================================================================================+
+                                      |
+                              [HTTP REST API]
+                                      v
++==================================================================================+
+|                     NEXT.JS API LAYER (/api/clickhouse)                          |
++==================================================================================+
+                                      |
+                              [React Hooks]
+                              useClickHouse()
+                              Auto-refresh
+                                      v
++==================================================================================+
+|                        REACT FRONTEND                                            |
+|----------------------------------------------------------------------------------|
+|  KPICard | TimeSeriesChart | MapView | EventsTable | EvidenceDrawer             |
+|  GovernanceView | ComplianceView | MusteringView | GenAIView                    |
++==================================================================================+
+```
+
+[View the full interactive architecture diagram](backup-site/public/architecture.html)
+
+---
+
+## Key Features
 
 | Feature | Description |
 |---------|-------------|
-| **Multi-PACS Aggregation** | Unified view across Lenel, C-CURE, S2, Genetec, HID, and Verkada systems |
+| **Multi-PACS Aggregation** | Unified view across Lenel, C-CURE, S2, Genetec, HID, and Verkada |
 | **Real-Time Analytics** | Live event streaming with sub-second deny spike detection |
 | **Audit Evidence Chain** | Click-through from aggregate metrics to raw PACS payloads |
 | **Entitlement Governance** | Full visibility into who has access, why, and who approved it |
@@ -27,148 +91,111 @@ This platform transforms fragmented physical access control systems into a unifi
 
 ---
 
-## Architecture
+## Screenshots
 
-### 📊 Interactive Architecture Presentation
-
-**[View Live Architecture Diagram →](http://localhost:3000/architecture.html)**
-
-An interactive HTML presentation showing the complete data flow from ClickHouse to React frontend. Perfect for demos and technical deep-dives.
-
-| Slide | Content |
-|-------|---------|
-| **Overview** | Full stack layer diagram with all components |
-| **Data Layer** | ClickHouse tables, views, and refresh rates |
-| **API Layer** | Next.js route handlers with code examples |
-| **Hooks Layer** | `useClickHouse` auto-refresh implementation |
-| **Components** | React component → data source mapping |
-| **Data Flow** | 8-step sequence from badge swipe to dashboard |
-
-> **Tip:** Use ← → arrow keys to navigate slides
-
-### System Overview
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                 ClearView Intelligence Platform                 │
-├─────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐              │
-│  │   Lenel     │  │   C-CURE    │  │     S2      │   ...        │
-│  │  Connector  │  │  Connector  │  │  Connector  │              │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘              │
-│         │                │                │                      │
-│         └────────────────┼────────────────┘                      │
-│                          ▼                                       │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │              ClickHouse OLAP Database                      │  │
-│  │     (access_events, views, 5-15s refresh intervals)       │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│                          │                                       │
-│                          ▼                                       │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │           Next.js API Routes (/api/clickhouse)            │  │
-│  └───────────────────────────────────────────────────────────┘  │
-│                          │                                       │
-│                          ▼                                       │
-│  ┌───────────────────────────────────────────────────────────┐  │
-│  │       React Dashboard (useClickHouse auto-refresh)        │  │
-│  └───────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Dashboard Views
-
-### Command Center
-Real-time operational visibility with:
-- Live KPI metrics (Events, Deny Rate, Active Doors, Suspicious Activity)
-- 24-hour grants vs denies time series
-- Door hotspot map with deny rate visualization
-- Anomaly detection alerts
-- Multi-PACS connector health monitoring
-
-### Governance
-Complete entitlement management:
-- Filter by All / Expiring / Exceptions
-- Grant type visibility (Policy, Manual, Exception)
-- Full approval chain with timestamps
-- Last-used tracking for access hygiene
-
-### Compliance
-Contractor and vendor management:
-- Safety training status tracking
-- Background check verification
-- Site induction compliance
-- Company-level audit summaries
-- One-click CSV export for auditors
-
-### Mustering
-Emergency response coordination:
-- Real-time personnel status (Accounted/Missing/En-Route)
-- Muster point capacity visualization
-- Priority missing personnel alerts
-- Last-seen location tracking
-- One-click communication actions
-
-### AI Builder
-Next-generation dashboard creation:
-- Describe dashboards in natural language
-- Watch AI generate KPIs, charts, and tables in real-time
-- Pre-built prompts for common scenarios
-- Powered by GPT-4
+<table>
+<tr>
+<td><img src="docs/demo/screenshots/dashboard-overview.png" alt="Dashboard Overview" width="400"/></td>
+<td><img src="docs/demo/screenshots/command-center.png" alt="Command Center" width="400"/></td>
+</tr>
+<tr>
+<td align="center"><em>Dashboard Overview</em></td>
+<td align="center"><em>Command Center</em></td>
+</tr>
+</table>
 
 ---
 
 ## Getting Started
 
 ```bash
+# Clone the repository
+git clone <repo-url>
+cd piam-dashboard
+
+# Full setup in one command (starts ClickHouse, loads data, runs frontend)
+make quickstart
+
+# Open the dashboard
+open http://localhost:3000
+```
+
+**That's it.** The dashboard will be live with synthetic data.
+
+### Manual Setup
+
+```bash
 # Install dependencies
 npm install
 
-# Run development server
+# Start development server
 npm run dev
 
 # Build for production
 npm run build
 ```
 
-The application runs on port 5000 by default.
-
 ---
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Charts**: Recharts
-- **Maps**: Mapbox GL
-- **AI**: OpenAI GPT-4
+| Layer | Technology | Purpose |
+|-------|------------|---------|
+| **Frontend** | Next.js 14 (App Router) | React framework with server components |
+| **Language** | TypeScript | Type-safe development |
+| **Styling** | Tailwind CSS | Utility-first CSS |
+| **Charts** | Recharts | Data visualization |
+| **Maps** | Mapbox GL | Geospatial visualization |
+| **Database** | ClickHouse | Column-oriented OLAP for real-time analytics |
+| **AI** | OpenAI GPT-4 | Natural language dashboard generation |
 
 ---
 
-## Multi-Tenant Support
+## Demo Flow (15 Minutes)
 
-Switch between tenant scenarios to demo different use cases:
+| Time | Section | Key Highlights |
+|------|---------|----------------|
+| 0-3 min | **Command Center** | Real-time KPIs, deny spike detection, multi-PACS visibility |
+| 3-5 min | **Drilldown** | Click event row, show evidence drawer with raw PACS payload |
+| 5-8 min | **Governance** | Entitlement visibility, approval chains, expiring access |
+| 8-11 min | **Compliance** | Contractor audit dashboard, one-click CSV export |
+| 11-13 min | **Mustering** | Emergency response, personnel accountability |
+| 13-15 min | **AI Builder** | "Create a PIAM dashboard" - GenAI moment |
+
+See the [full presenter's guide](docs/demo/README.md) for talking points and demo actions.
+
+---
+
+## Multi-Tenant Scenarios
+
+Switch between demo tenants to showcase different use cases:
 
 | Tenant | Scenario | Characteristics |
 |--------|----------|-----------------|
-| **Acme Corporate** | Office complex | Lower deny rates, stable operations |
-| **BuildRight Construction** | Active job site | Higher compliance issues, more contractor activity |
+| **Acme Corporate** | Office complex | Lower deny rates (~2.5%), stable operations |
+| **BuildRight Construction** | Active job site | Higher compliance issues, contractor-heavy |
 
 ---
 
-## Demo Flow
+## Common Commands
 
-Recommended 15-minute presentation flow:
+```bash
+make quickstart    # Full setup: ClickHouse + data + frontend
+make up            # Start ClickHouse + Superset only
+make generate      # Generate synthetic PACS data
+make trickle       # Start live event stream
+make shell-ch      # ClickHouse CLI
+make health        # Check service status
+make logs          # View container logs
+```
 
-1. **Command Center** (3 min) - Show real-time deny spikes, multi-PACS visibility
-2. **Drilldown** (2 min) - Click event row → Evidence drawer with raw PACS payload
-3. **Governance** (3 min) - Demonstrate entitlement visibility and approval chains
-4. **Compliance** (3 min) - Show contractor audit with CSV export
-5. **Mustering** (2 min) - Simulate emergency response scenario
-6. **AI Builder** (2 min) - "Create a PIAM dashboard" GenAI moment
+---
+
+## Documentation
+
+- [Architecture Guide](docs/ARCHITECTURE.md) - Complete technical deep-dive
+- [Demo Guide](docs/demo/README.md) - Presenter's guide with talking points
+- [Interactive Diagram](backup-site/public/architecture.html) - Visual architecture walkthrough
 
 ---
 
@@ -179,5 +206,6 @@ MIT License - See LICENSE file for details.
 ---
 
 <p align="center">
-  <strong>ClearView Intelligence</strong> - Unified Physical Security Intelligence
+<strong>ClearView Intelligence</strong><br/>
+<em>Strength of Simplicity</em>
 </p>

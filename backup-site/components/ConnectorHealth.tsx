@@ -1,8 +1,44 @@
+/**
+ * ConnectorHealth - PACS System Connector Status Monitor
+ *
+ * This component displays the health status of physical access control system
+ * (PACS) connectors that feed data into the PIAM platform. It shows connection
+ * status, latency metrics, and last check timestamps for each integrated system
+ * like Lenel, C-CURE, S2 NetBox, Genetec, HID, and Verkada.
+ *
+ * @component
+ * @example
+ * <ConnectorHealth tenant="acme" />
+ * <ConnectorHealth tenant="buildright" useLiveData={true} />
+ *
+ * Architecture Notes:
+ * - Uses useConnectorHealthWithFallback hook for live/demo data handling
+ * - Three status levels: healthy (OK), degraded (!), down/offline (X)
+ * - Latency displayed in milliseconds with warning highlight above 200ms
+ * - Down connectors show dash instead of latency value
+ * - Live indicator badge shown when connected to real-time health checks
+ * - Loading spinner overlay during data refresh
+ * - Per-tenant connector configurations (acme has different PACS than buildright)
+ *
+ * Data Flow:
+ * - tenant prop selects connector list from connectorData record
+ * - useLiveData triggers real API health checks vs static demo data
+ * - Hook returns { data, loading, isLive } for UI state management
+ * - Data transformed from hook format to component's expected Connector shape
+ * - Status mapping: 'offline' from API -> 'down' for display
+ *
+ * @param {ConnectorHealthProps} props - Component props
+ * @param {string} props.tenant - The tenant identifier for connector list
+ * @param {boolean} [props.useLiveData=false] - Whether to fetch live health data
+ */
 'use client';
 
 import { useMemo } from 'react';
 import { useConnectorHealthWithFallback } from '@/hooks/useDashboardData';
 
+/**
+ * Props for the ConnectorHealth component
+ */
 interface ConnectorHealthProps {
   tenant: string;
   useLiveData?: boolean;

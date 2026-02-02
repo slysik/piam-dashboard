@@ -1,5 +1,40 @@
+/**
+ * TenantSelector - Multi-Tenant Organization Dropdown
+ *
+ * This component provides a dropdown selector for switching between different
+ * tenant organizations in the PIAM dashboard. It enables users to view data
+ * for different companies/sites that the system manages, demonstrating the
+ * multi-tenant architecture of the platform.
+ *
+ * @component
+ * @example
+ * <TenantSelector
+ *   value={selectedTenant}
+ *   onChange={(tenant) => setSelectedTenant(tenant)}
+ * />
+ *
+ * Architecture Notes:
+ * - Controlled component: value and onChange managed by parent
+ * - Currently supports two demo tenants: 'acme' (corporate office) and 'buildright' (construction)
+ * - Tenant IDs are typed as literal union for type safety
+ * - Simple select element with focus ring matching brand colors
+ * - Tenant metadata (name, description) available for future tooltip/display use
+ *
+ * Data Flow:
+ * - value prop: Current selected tenant ID
+ * - onChange callback: Notifies parent when selection changes
+ * - Parent typically lifts this state to propagate across all dashboard components
+ * - Changing tenant triggers data refresh in all tenant-aware components
+ *
+ * @param {TenantSelectorProps} props - Component props
+ * @param {'acme' | 'buildright'} props.value - Currently selected tenant ID
+ * @param {(tenant: 'acme' | 'buildright') => void} props.onChange - Selection change callback
+ */
 'use client';
 
+/**
+ * Props for the TenantSelector component
+ */
 interface TenantSelectorProps {
   value: 'acme' | 'buildright';
   onChange: (tenant: 'acme' | 'buildright') => void;

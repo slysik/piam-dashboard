@@ -3,10 +3,28 @@
 PIAM Dashboard - Replay Script
 
 Injects specific anomaly scenarios into ClickHouse for testing
-and demonstration purposes:
-- Deny spike at a specific door
-- Suspicious rapid denies by same badge
-- Connector degradation events
+and demonstration purposes. This script is designed to create
+realistic anomaly patterns that can be detected by monitoring
+and alerting systems.
+
+Supported Scenarios:
+    - Deny Spike: Many denies at one door in a short time window,
+      simulating a broken reader or credential issue.
+    - Suspicious Cluster: Rapid denies by the same badge at multiple
+      locations, simulating a stolen/cloned badge attempt.
+    - Connector Degradation: Health records showing a connector going
+      from healthy to degraded to offline and back.
+
+Usage:
+    python replay.py --scenario all                    # Run all scenarios
+    python replay.py --scenario deny-spike --deny-count 30
+    python replay.py --scenario suspicious --suspicious-count 10
+    python replay.py --scenario degradation
+    python replay.py --host localhost --port 8123 --seed 42
+
+Dependencies:
+    - clickhouse-connect: ClickHouse Python driver
+    - PyYAML: Configuration file parsing
 """
 
 import argparse
@@ -21,19 +39,61 @@ import yaml
 
 
 def load_config(config_path: str) -> dict[str, Any]:
-    """Load configuration from YAML file."""
+    """
+    Load configuration from YAML file.
+
+    Args:
+        config_path: Path to the YAML configuration file.
+
+    Returns:
+        Dictionary containing the parsed configuration with tenant settings
+        and deny reasons for scenario generation.
+
+    Raises:
+        FileNotFoundError: If the configuration file does not exist.
+        yaml.YAMLError: If the YAML file is malformed.
+    """
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
 
 
 def get_clickhouse_client(host: str, port: int) -> clickhouse_connect.driver.Client:
-    """Create ClickHouse client connection."""
+    """
+    Create ClickHouse client connection.
+
+    Args:
+        host: ClickHouse server hostname or IP address.
+        port: ClickHouse HTTP interface port (typically 8123).
+
+    Returns:
+        Connected ClickHouse client instance.
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If connection fails.
+    """
     return clickhouse_connect.get_client(host=host, port=port)
 
 
 def fetch_reference_data(client: clickhouse_connect.driver.Client) -> dict[str, Any]:
-    """Fetch reference data for scenario generation."""
-    ref_data = {}
+    """
+    Fetch reference data for scenario generation.
+
+    Queries dimension tables to retrieve sample locations, persons, and
+    connectors that can be used as targets for anomaly injection.
+
+    Args:
+        client: Connected ClickHouse client instance.
+
+    Returns:
+        Dictionary containing:
+            - locations: List of up to 10 location records
+            - persons: List of up to 50 active person records
+            - connectors: List of up to 10 connector records
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If queries fail.
+    """
+    ref_data: dict[str, Any] = {}
 
     # Get a sample door for deny spike
     locations_result = client.query(
@@ -85,8 +145,23 @@ def inject_deny_spike(
     count: int = 20,
 ) -> int:
     """
-    Inject a deny spike scenario: many denies at one door in a short time window.
-    This simulates a broken reader or credential issue.
+    Inject a deny spike scenario.
+
+    Creates many deny events at a single door within a 10-minute window,
+    simulating a broken reader, credential system issue, or misconfigured
+    access policy. All events use the same deny reason code.
+
+    Args:
+        client: Connected ClickHouse client instance.
+        ref_data: Reference data dictionary from fetch_reference_data().
+        config: Configuration dictionary with deny reason codes.
+        count: Number of deny events to inject (default 20).
+
+    Returns:
+        Number of events successfully injected.
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If insert fails.
     """
     if not ref_data["locations"] or not ref_data["persons"]:
         print("  No reference data available for deny spike")
@@ -155,8 +230,29 @@ def inject_suspicious_cluster(
     count: int = 5,
 ) -> int:
     """
-    Inject a suspicious activity cluster: rapid denies by the same badge
-    at multiple locations. This simulates a stolen/cloned badge.
+    Inject a suspicious activity cluster.
+
+    Creates rapid deny events by the same badge at multiple locations
+    within a 2-minute window. Events are spaced 10-30 seconds apart,
+    making it physically impossible for one person to reach all locations.
+    All events are marked with suspicious=True.
+
+    This scenario simulates:
+        - Stolen or cloned badge being used
+        - Credential sharing attempt
+        - Coordinated unauthorized access attempt
+
+    Args:
+        client: Connected ClickHouse client instance.
+        ref_data: Reference data dictionary from fetch_reference_data().
+        config: Configuration dictionary (used for consistency with other inject functions).
+        count: Number of suspicious events to inject (default 5).
+
+    Returns:
+        Number of events successfully injected.
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If insert fails.
     """
     if not ref_data["locations"] or not ref_data["persons"]:
         print("  No reference data available for suspicious cluster")
@@ -167,7 +263,7 @@ def inject_suspicious_cluster(
     tenant_id = suspect["tenant_id"]
 
     # Filter locations to same tenant
-    tenant_locations = [l for l in ref_data["locations"] if l["tenant_id"] == tenant_id]
+    tenant_locations = [loc for loc in ref_data["locations"] if loc["tenant_id"] == tenant_id]
     if len(tenant_locations) < 2:
         tenant_locations = ref_data["locations"]
 
@@ -217,8 +313,27 @@ def inject_connector_degradation(
     duration_minutes: int = 30,
 ) -> int:
     """
-    Inject connector degradation records showing a connector going from
-    healthy to degraded to offline and back.
+    Inject connector degradation records.
+
+    Creates a sequence of health records showing a connector going through
+    a degradation cycle: healthy -> degraded -> offline -> recovery -> healthy.
+    Records are spaced 5 minutes apart.
+
+    This scenario simulates:
+        - Network connectivity issues
+        - PACS system overload or failure
+        - Scheduled or unscheduled maintenance events
+
+    Args:
+        client: Connected ClickHouse client instance.
+        ref_data: Reference data dictionary from fetch_reference_data().
+        duration_minutes: Total duration of the degradation sequence (default 30).
+
+    Returns:
+        Number of health records successfully injected.
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If insert fails.
     """
     if not ref_data["connectors"]:
         print("  No connectors available for degradation scenario")
@@ -269,13 +384,23 @@ def inject_connector_degradation(
     client.insert("piam.fact_connector_health", rows, column_names=column_names)
 
     print(f"  Injected {len(records)} health records for '{target_connector['connector_name']}'")
-    print(f"  Degradation sequence: healthy -> degraded -> offline -> recovery")
+    print("  Degradation sequence: healthy -> degraded -> offline -> recovery")
     print(f"  Duration: {duration_minutes} minutes")
 
     return len(records)
 
 
-def main():
+def main() -> None:
+    """
+    Main entry point for the replay script.
+
+    Parses command-line arguments, establishes ClickHouse connection,
+    fetches reference data, and executes the selected anomaly scenario(s).
+
+    Supports running individual scenarios or all scenarios at once,
+    with configurable event counts and optional random seed for
+    reproducible results.
+    """
     parser = argparse.ArgumentParser(
         description="Inject anomaly scenarios into ClickHouse for testing"
     )

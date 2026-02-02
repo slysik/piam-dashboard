@@ -1,7 +1,50 @@
+/**
+ * SettingsPanel - Data Source Configuration Dropdown
+ *
+ * This component provides a settings dropdown for configuring the dashboard's
+ * data source. It allows toggling between demo data and live ClickHouse data,
+ * testing the database connection, and controlling real-time event trickle
+ * for demonstration purposes.
+ *
+ * @component
+ * @example
+ * <SettingsPanel
+ *   useLiveData={isLiveMode}
+ *   onToggleLiveData={(enabled) => setIsLiveMode(enabled)}
+ *   tenant="acme"
+ * />
+ *
+ * Architecture Notes:
+ * - Gear icon button with pulse indicator when trickle is active
+ * - Click-outside behavior closes dropdown panel
+ * - Connection test hits /api/clickhouse with SELECT 1 query
+ * - Trickle feature: Generates synthetic events every 3 seconds for demos
+ * - Trickle calls /api/trickle endpoint with tenant identifier
+ * - Visual feedback: Live badge when connected, error message on failure
+ * - Toggle switch for demo vs live data mode
+ * - Session trickle count displayed for event generation tracking
+ *
+ * Data Flow:
+ * - useLiveData prop: Boolean controlling data source mode from parent
+ * - onToggleLiveData callback: Notifies parent when mode changes
+ * - tenant prop: Used for trickle endpoint tenant identification
+ * - connectionStatus state: 'unknown', 'connected', or 'error'
+ * - trickleActive state: Controls interval-based event generation
+ * - trickleCount state: Accumulates events generated this session
+ * - trickleIntervalRef: Cleanup reference for interval on unmount
+ *
+ * @param {SettingsPanelProps} props - Component props
+ * @param {boolean} props.useLiveData - Whether live data mode is enabled
+ * @param {(value: boolean) => void} props.onToggleLiveData - Mode toggle callback
+ * @param {string} [props.tenant='acme'] - Tenant ID for trickle data generation
+ */
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
 
+/**
+ * Props for the SettingsPanel component
+ */
 interface SettingsPanelProps {
   useLiveData: boolean;
   onToggleLiveData: (value: boolean) => void;

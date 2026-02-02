@@ -1,7 +1,43 @@
+/**
+ * EventsTable - Access Event Log Display Component
+ *
+ * This component renders a tabular view of recent physical access events,
+ * showing when, who, where, and the result (GRANT/DENY) of each badge swipe.
+ * It provides the primary operational view for security operators monitoring
+ * access control activity across the enterprise.
+ *
+ * @component
+ * @example
+ * <EventsTable
+ *   events={accessEvents}
+ *   onEventClick={(event) => openEvidenceDrawer(event)}
+ * />
+ *
+ * Architecture Notes:
+ * - Displays top 10 events with slice(0, 10) for performance
+ * - Click handler enables drill-down to detailed evidence view
+ * - Suspicious flag column provides quick visual indicator for anomalies
+ * - Color-coded result badges (green for GRANT, red for DENY)
+ * - Hover state on rows indicates clickability for investigation
+ * - Uses shared Event type from main page for type safety
+ *
+ * Data Flow:
+ * - Receives events array from parent component (typically from API or demo data)
+ * - onEventClick callback passed from parent to handle row selection
+ * - Event type imported from @/app/page defines the event schema
+ * - Parent typically opens EvidenceDrawer with selected event details
+ *
+ * @param {EventsTableProps} props - Component props
+ * @param {Event[]} props.events - Array of access events to display
+ * @param {(event: Event) => void} props.onEventClick - Callback when event row is clicked
+ */
 'use client';
 
 import type { Event } from '@/app/page';
 
+/**
+ * Props for the EventsTable component
+ */
 interface EventsTableProps {
   events: Event[];
   onEventClick: (event: Event) => void;

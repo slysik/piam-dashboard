@@ -1,8 +1,47 @@
+/**
+ * EvidenceDrawer - Access Event Investigation Side Panel
+ *
+ * This component displays a slide-out drawer containing detailed evidence
+ * for a selected access event. It provides security operators with all
+ * the information needed to investigate suspicious activity, including
+ * raw PACS payload data and quick investigation actions.
+ *
+ * @component
+ * @example
+ * {selectedEvent && (
+ *   <EvidenceDrawer
+ *     event={selectedEvent}
+ *     onClose={() => setSelectedEvent(null)}
+ *   />
+ * )}
+ *
+ * Architecture Notes:
+ * - Slide-in drawer pattern from right side of viewport
+ * - Backdrop overlay for modal behavior with click-to-close
+ * - Raw PACS payload displayed as formatted JSON for technical investigation
+ * - Copy-to-clipboard functionality for JSON export
+ * - Investigation action buttons for common next-step workflows
+ * - Fixed positioning ensures drawer overlays content properly
+ * - Uses shared Event type from main page for consistency
+ *
+ * Data Flow:
+ * - event prop: Full Event object including rawPayload for JSON display
+ * - onClose callback: Notifies parent to clear selected event
+ * - copied state: Manages UI feedback for clipboard copy action
+ * - rawPayload: Contains original PACS system data for audit/debugging
+ *
+ * @param {EvidenceDrawerProps} props - Component props
+ * @param {Event} props.event - The access event to display evidence for
+ * @param {() => void} props.onClose - Callback to close the drawer
+ */
 'use client';
 
 import { useState } from 'react';
 import type { Event } from '@/app/page';
 
+/**
+ * Props for the EvidenceDrawer component
+ */
 interface EvidenceDrawerProps {
   event: Event;
   onClose: () => void;

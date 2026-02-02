@@ -1,7 +1,40 @@
+/**
+ * GovernanceView - Access Entitlement Management Dashboard
+ *
+ * This component displays a comprehensive view of access entitlements across
+ * the organization, enabling security teams to manage, audit, and review
+ * who has access to what physical areas. It supports filtering by status
+ * (expiring, exceptions) and provides detailed drill-down capabilities.
+ *
+ * @component
+ * @example
+ * <GovernanceView tenant="acme" />
+ *
+ * Architecture Notes:
+ * - Multi-tenant support: Data is filtered based on the tenant prop
+ * - Filter system supports 'all', 'expiring', and 'exceptions' views
+ * - Grant types distinguish between Policy (automated), Manual, and Exception grants
+ * - Side drawer pattern used for detailed entitlement inspection
+ * - Shows full approval chain for audit trail purposes
+ * - Action buttons provided for access revocation and audit export
+ *
+ * Data Flow:
+ * - Receives tenant identifier to filter entitlement data
+ * - entitlementData: Static record keyed by tenant with sample entitlements
+ * - Stats computed on-the-fly from filtered entitlement list
+ * - Selected person triggers drawer with full entitlement details
+ * - Approval chain displayed as timeline for compliance auditing
+ *
+ * @param {GovernanceViewProps} props - Component props
+ * @param {string} props.tenant - The tenant identifier to filter data by
+ */
 'use client';
 
 import { useState } from 'react';
 
+/**
+ * Props for the GovernanceView component
+ */
 interface GovernanceViewProps {
   tenant: string;
 }

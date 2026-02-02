@@ -1,5 +1,42 @@
+/**
+ * PersonaSelector - User Persona/Role Dropdown Selector
+ *
+ * This component provides a dropdown for switching between different user
+ * personas (roles) in the dashboard. Each persona has different dashboard
+ * views and features tailored to their job function, demonstrating the
+ * platform's role-based access and customized experience capabilities.
+ *
+ * @component
+ * @example
+ * <PersonaSelector
+ *   value={selectedPersona}
+ *   onChange={(persona) => setSelectedPersona(persona)}
+ * />
+ *
+ * Architecture Notes:
+ * - Five persona types: ceo (Executive), soc (Security Operations Center),
+ *   facilities, ithr (IT/HR), compliance
+ * - Styled with gradient purple/indigo background for visual prominence
+ * - Custom dropdown arrow icon overlays the select element
+ * - Persona icons displayed as emoji in both selector and options
+ * - Controlled component pattern with value/onChange props
+ * - Persona type exported for use in parent components
+ *
+ * Data Flow:
+ * - value prop: Current selected Persona type from parent state
+ * - onChange callback: Notifies parent when persona selection changes
+ * - Parent uses persona to filter visible navigation tabs and features
+ * - personas array defines available roles with id, label, and icon
+ *
+ * @param {PersonaSelectorProps} props - Component props
+ * @param {Persona} props.value - Currently selected persona
+ * @param {(persona: Persona) => void} props.onChange - Selection change callback
+ */
 'use client';
 
+/**
+ * Available user persona/role types in the dashboard
+ */
 export type Persona = 'ceo' | 'soc' | 'facilities' | 'ithr' | 'compliance';
 
 interface PersonaSelectorProps {

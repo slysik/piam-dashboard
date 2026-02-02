@@ -1,3 +1,38 @@
+/**
+ * TimeSeriesChart - Access Grants vs Denies Trend Visualization
+ *
+ * This component displays a dual-line time series chart showing the volume
+ * of access grants and denies over configurable time periods. It supports
+ * both live data from ClickHouse and demo data fallback, with real-time
+ * indicators when connected to live feeds.
+ *
+ * @component
+ * @example
+ * <TimeSeriesChart tenant="acme" timeRange="24h" />
+ * <TimeSeriesChart tenant="buildright" useLiveData={true} timeRange="15m" />
+ *
+ * Architecture Notes:
+ * - Uses useTimeSeriesWithFallback hook for data fetching with automatic fallback
+ * - generateTimeSeriesData creates synthetic demo data based on tenant and time range
+ * - Time range affects data granularity: 15m (1-min intervals), 60m (5-min), 24h (hourly)
+ * - Activity multiplier applied for 24h view to simulate business hour patterns
+ * - CustomTooltip provides styled hover info with value details
+ * - Live indicator badge shown when connected to real-time data source
+ * - Loading spinner overlay during data transitions
+ * - Animations disabled for consistent chart rendering
+ *
+ * Data Flow:
+ * - tenant prop affects base grant/deny volumes (acme vs buildright profiles)
+ * - timeRange determines data point granularity and x-axis labels
+ * - useLiveData flag triggers real API calls vs demo data generation
+ * - Hook returns { data, loading, isLive } for render control
+ * - Chart data shape: { time: string, grants: number, denies: number }
+ *
+ * @param {TimeSeriesChartProps} props - Component props
+ * @param {string} props.tenant - The tenant identifier for data filtering
+ * @param {'15m' | '60m' | '24h'} [props.timeRange='24h'] - Time range for chart data
+ * @param {boolean} [props.useLiveData=false] - Whether to fetch from live ClickHouse
+ */
 'use client';
 
 import { useMemo } from 'react';
@@ -13,19 +48,34 @@ import {
 } from 'recharts';
 import { useTimeSeriesWithFallback } from '@/hooks/useDashboardData';
 
+/**
+ * Props for the TimeSeriesChart component
+ */
 interface TimeSeriesChartProps {
   tenant: string;
   timeRange?: '15m' | '60m' | '24h';
   useLiveData?: boolean;
 }
 
+/**
+ * Generates synthetic time series data for the grants/denies chart.
+ * Data granularity and volume patterns vary based on time range:
+ * - 15m: 15 data points at 1-minute intervals, lower baseline volume
+ * - 60m: 12 data points at 5-minute intervals, medium baseline volume
+ * - 24h: 24 data points at 1-hour intervals, with business hours multiplier
+ *
+ * Tenant-specific baselines: acme (corporate) has higher grants, lower denies
+ * than buildright (construction site) which sees more denials
+ */
 function generateTimeSeriesData(tenant: string, timeRange: '15m' | '60m' | '24h' = '24h') {
   const data = [];
   const now = new Date();
+  // Tenant-specific baseline volumes (acme: corporate, buildright: construction)
   const baseGrants = tenant === 'acme' ? 45 : 35;
   const baseDenies = tenant === 'acme' ? 2 : 5;
 
   if (timeRange === '15m') {
+    // 15-minute view: 1-minute granularity, 15 data points
     for (let i = 14; i >= 0; i--) {
       const minute = new Date(now.getTime() - i * 60 * 1000);
       const minStr = minute.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -36,6 +86,7 @@ function generateTimeSeriesData(tenant: string, timeRange: '15m' | '60m' | '24h'
       });
     }
   } else if (timeRange === '60m') {
+    // 1-hour view: 5-minute granularity, 12 data points
     for (let i = 11; i >= 0; i--) {
       const fiveMin = new Date(now.getTime() - i * 5 * 60 * 1000);
       const timeStr = fiveMin.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -46,10 +97,12 @@ function generateTimeSeriesData(tenant: string, timeRange: '15m' | '60m' | '24h'
       });
     }
   } else {
+    // 24-hour view: 1-hour granularity, 24 data points with business hour patterns
     for (let i = 23; i >= 0; i--) {
       const hour = new Date(now.getTime() - i * 60 * 60 * 1000);
       const hourStr = hour.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
       const hourOfDay = hour.getHours();
+      // Business hours (8am-6pm) have 1.5x activity, off-hours only 0.3x
       const activityMultiplier = hourOfDay >= 8 && hourOfDay <= 18 ? 1.5 : 0.3;
 
       data.push({

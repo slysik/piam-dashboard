@@ -1,7 +1,40 @@
+/**
+ * MusteringView - Emergency Response Personnel Tracking Dashboard
+ *
+ * This component provides real-time visibility into personnel location and
+ * safety status during emergency situations. It displays muster point
+ * capacity, personnel check-in status, and enables rapid identification
+ * of unaccounted individuals for emergency response teams.
+ *
+ * @component
+ * @example
+ * <MusteringView tenant="acme" />
+ *
+ * Architecture Notes:
+ * - Real-time elapsed timer updates every second to show emergency duration
+ * - Personnel status tracked as 'Checked In', 'Checked Out', or 'Marked Safe'
+ * - Visual urgency: Checked Out personnel highlighted with pulsing animations
+ * - Muster points show capacity utilization with progress bars
+ * - Priority panel surfaces checked-out personnel for immediate attention
+ * - Side drawer provides contact info and quick actions (Call Now, View on Map)
+ *
+ * Data Flow:
+ * - Receives tenant identifier to load tenant-specific emergency data
+ * - musteringData contains: activeEmergency flag, emergency details, muster points, people
+ * - Stats computed from people array (total, checkedIn, checkedOut, markedSafe)
+ * - safePercentage calculated as (checkedIn + markedSafe) / total
+ * - elapsedTime state updates via setInterval for real-time duration display
+ *
+ * @param {MusteringViewProps} props - Component props
+ * @param {string} props.tenant - The tenant identifier to filter data by
+ */
 'use client';
 
 import { useState, useEffect } from 'react';
 
+/**
+ * Props for the MusteringView component
+ */
 interface MusteringViewProps {
   tenant: string;
 }
@@ -75,12 +108,16 @@ const statusStyles: Record<string, { bg: string; text: string; solidBg: string; 
 };
 
 export default function MusteringView({ tenant }: MusteringViewProps) {
+  // Filter personnel list by status (all, checked out only, marked safe only)
   const [filter, setFilter] = useState<'all' | 'checkedout' | 'markedsafe'>('all');
+  // Selected person for detail drawer
   const [selectedPerson, setSelectedPerson] = useState<Person | null>(null);
+  // Elapsed time counter for emergency duration display (starts at 0, adds to demo's 300s)
   const [elapsedTime, setElapsedTime] = useState(0);
-  
+
   const data = musteringData[tenant] || musteringData.acme;
-  
+
+  // Real-time timer: increments every second to show live emergency duration
   useEffect(() => {
     const interval = setInterval(() => {
       setElapsedTime(prev => prev + 1);
@@ -88,18 +125,21 @@ export default function MusteringView({ tenant }: MusteringViewProps) {
     return () => clearInterval(interval);
   }, []);
 
+  // Format seconds into MM:SS display for elapsed time
   const formatElapsed = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Apply status filter to personnel list
   const filteredPeople = data.people.filter(p => {
     if (filter === 'checkedout') return p.status === 'Checked Out';
     if (filter === 'markedsafe') return p.status === 'Marked Safe';
     return true;
   });
 
+  // Compute personnel statistics for KPI cards
   const stats = {
     total: data.people.length,
     checkedIn: data.people.filter(p => p.status === 'Checked In').length,
@@ -107,6 +147,8 @@ export default function MusteringView({ tenant }: MusteringViewProps) {
     markedSafe: data.people.filter(p => p.status === 'Marked Safe').length,
   };
 
+  // Calculate safety percentage: (checkedIn + markedSafe) / total
+  // Both statuses indicate person is accounted for and safe
   const safePercentage = Math.round(((stats.checkedIn + stats.markedSafe) / stats.total) * 100);
 
   return (

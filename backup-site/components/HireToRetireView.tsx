@@ -1,8 +1,44 @@
+/**
+ * HireToRetireView - Identity Lifecycle Access Hygiene Dashboard
+ *
+ * This component provides visibility into HR/PIAM alignment, highlighting
+ * cases where badge access does not match employment status. It helps
+ * security teams identify terminated employees with active badges,
+ * expired contractors still retaining access, and dormant badges that
+ * haven't been used in extended periods.
+ *
+ * @component
+ * @example
+ * <HireToRetireView tenant="acme" />
+ *
+ * Architecture Notes:
+ * - HR/PIAM state matrix chart visualizes alignment/misalignment patterns
+ * - Four key metrics: Terminated+Active, Contractors Past End Date, Dormant Badges, Healthy
+ * - Filter toggles: all, terminated (critical), expired (contractor), dormant (30+ days)
+ * - Clickable KPI cards filter the table to show specific risk categories
+ * - Identity detail drawer shows both HR and PIAM attributes side-by-side
+ * - Critical action callout for terminated employees with active badges
+ * - "Disable Badge Now" button for immediate remediation workflow
+ * - Matrix chart uses color-coded bars (red=terminated/active, green=healthy)
+ *
+ * Data Flow:
+ * - hygieneData: Static array of Identity objects with HR and PIAM status
+ * - matrixData: Aggregated counts for HR/PIAM state combinations
+ * - Computed lists: terminatedActive, contractorExpired, dormantBadges
+ * - filter state controls which identities display in the table
+ * - selectedIdentity triggers the detail drawer for investigation
+ *
+ * @param {HireToRetireViewProps} props - Component props
+ * @param {string} props.tenant - The tenant identifier (for future multi-tenant data)
+ */
 'use client';
 
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
+/**
+ * Props for the HireToRetireView component
+ */
 interface HireToRetireViewProps {
   tenant: string;
 }

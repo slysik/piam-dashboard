@@ -4,6 +4,24 @@ PIAM Dashboard - Simple Trickle Data Generator
 
 Generates and inserts realistic access events and access requests into ClickHouse.
 Works with the current schema (dim_person, dim_location, fact_access_requests).
+
+This is a simplified version of trickle.py that also generates access request
+workflow data, simulating the full lifecycle of access requests from submission
+through approval/rejection to provisioning.
+
+Key Features:
+    - Access event generation with configurable deny rates
+    - Access request creation with realistic justifications
+    - Request workflow progression (submitted -> approved -> provisioned)
+    - SLA tracking for request processing times
+
+Usage:
+    python trickle_simple.py --host localhost --port 8123
+    python trickle_simple.py --events-per-batch 10 --deny-rate 0.15
+    python trickle_simple.py --no-requests  # Events only, no workflow requests
+
+Dependencies:
+    - clickhouse-connect: ClickHouse Python driver
 """
 from __future__ import annotations
 
@@ -12,7 +30,7 @@ import random
 import signal
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
@@ -57,21 +75,59 @@ APPROVAL_NOTES = [
 ]
 
 
-def signal_handler(signum, frame):
-    """Handle shutdown signals gracefully."""
+def signal_handler(signum: int, frame: Any) -> None:
+    """
+    Handle shutdown signals gracefully.
+
+    Sets the global running flag to False, allowing the main loop to
+    complete its current batch before exiting cleanly.
+
+    Args:
+        signum: The signal number received (e.g., SIGINT, SIGTERM).
+        frame: The current stack frame (unused but required by signal API).
+    """
     global running
     print("\nShutdown signal received. Finishing current batch...")
     running = False
 
 
 def get_client(host: str, port: int) -> clickhouse_connect.driver.Client:
-    """Create ClickHouse client connection."""
+    """
+    Create ClickHouse client connection.
+
+    Args:
+        host: ClickHouse server hostname or IP address.
+        port: ClickHouse HTTP interface port (typically 8123).
+
+    Returns:
+        Connected ClickHouse client instance.
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If connection fails.
+    """
     return clickhouse_connect.get_client(host=host, port=port)
 
 
 def fetch_reference_data(client: clickhouse_connect.driver.Client) -> dict[str, Any]:
-    """Fetch reference data from ClickHouse for event generation."""
-    ref_data = {"persons": [], "locations": [], "tenants": set()}
+    """
+    Fetch reference data from ClickHouse for event generation.
+
+    Queries dim_person and dim_location tables to retrieve data needed
+    for generating realistic access events and requests.
+
+    Args:
+        client: Connected ClickHouse client instance.
+
+    Returns:
+        Dictionary containing:
+            - persons: List of person records with badge IDs (limited to 1000)
+            - locations: List of location/door records
+            - tenants: Set of unique tenant IDs found in the data
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If queries fail.
+    """
+    ref_data: dict[str, Any] = {"persons": [], "locations": [], "tenants": set()}
 
     # Fetch persons with their badges
     persons_result = client.query("""
@@ -107,7 +163,27 @@ def fetch_reference_data(client: clickhouse_connect.driver.Client) -> dict[str, 
 
 
 def generate_event(ref_data: dict[str, Any], deny_rate: float = 0.25) -> dict[str, Any] | None:
-    """Generate a single realistic access event."""
+    """
+    Generate a single realistic access event.
+
+    Creates an access event by randomly selecting a person and a location
+    within the same tenant. The event result is determined by the deny_rate
+    parameter, with suspicious events generated at a 5% rate.
+
+    Args:
+        ref_data: Reference data dictionary from fetch_reference_data().
+        deny_rate: Probability of generating a deny event (0.0-1.0, default 0.25).
+
+    Returns:
+        Dictionary containing the access event fields, or None if no valid
+        person/location combination is available. Event fields include:
+            - event_id: Unique UUID for the event
+            - tenant_id, person_id, location_id: Foreign keys
+            - event_time: UTC timestamp of the event
+            - result: "grant" or "deny"
+            - deny_reason/deny_code: Populated for deny events
+            - suspicious_flag/suspicious_reason/suspicious_score: Anomaly indicators
+    """
     if not ref_data["persons"] or not ref_data["locations"]:
         return None
 
@@ -116,7 +192,7 @@ def generate_event(ref_data: dict[str, Any], deny_rate: float = 0.25) -> dict[st
     tenant_id = person["tenant_id"]
 
     # Filter locations for this tenant
-    tenant_locations = [l for l in ref_data["locations"] if l["tenant_id"] == tenant_id]
+    tenant_locations = [loc for loc in ref_data["locations"] if loc["tenant_id"] == tenant_id]
     if not tenant_locations:
         return None
 
@@ -170,7 +246,19 @@ def generate_event(ref_data: dict[str, Any], deny_rate: float = 0.25) -> dict[st
 
 
 def insert_events(client: clickhouse_connect.driver.Client, events: list[dict[str, Any]]) -> None:
-    """Insert events into ClickHouse."""
+    """
+    Insert access events into ClickHouse.
+
+    Batch inserts access events into the piam.fact_access_events table.
+
+    Args:
+        client: Connected ClickHouse client instance.
+        events: List of event dictionaries to insert. Each event must
+            contain all required columns for fact_access_events.
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If insert fails.
+    """
     if not events:
         return
 
@@ -191,7 +279,27 @@ def insert_events(client: clickhouse_connect.driver.Client, events: list[dict[st
 
 
 def generate_access_request(ref_data: dict[str, Any]) -> dict[str, Any] | None:
-    """Generate a new access request."""
+    """
+    Generate a new access request.
+
+    Creates an access request record simulating a user requesting access
+    to a location. The request is initialized with "submitted" status
+    and assigned a random SLA (24, 48, or 72 hours).
+
+    Args:
+        ref_data: Reference data dictionary from fetch_reference_data().
+
+    Returns:
+        Dictionary containing the access request fields, or None if no valid
+        person/location combination is available. Request fields include:
+            - request_id: Unique UUID for the request
+            - person_id: The person requesting access
+            - requester_id: Who submitted the request (70% self, 30% other)
+            - location_id: Target location for access
+            - request_type: Type from REQUEST_TYPES (new_access, modification, etc.)
+            - status: Always "submitted" for new requests
+            - sla_hours: Target completion time (24, 48, or 72 hours)
+    """
     if not ref_data["persons"] or not ref_data["locations"]:
         return None
 
@@ -199,7 +307,7 @@ def generate_access_request(ref_data: dict[str, Any]) -> dict[str, Any] | None:
     person = random.choice(ref_data["persons"])
     tenant_id = person["tenant_id"]
 
-    tenant_locations = [l for l in ref_data["locations"] if l["tenant_id"] == tenant_id]
+    tenant_locations = [loc for loc in ref_data["locations"] if loc["tenant_id"] == tenant_id]
     if not tenant_locations:
         return None
 
@@ -239,7 +347,16 @@ def generate_access_request(ref_data: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def insert_access_request(client: clickhouse_connect.driver.Client, request: dict[str, Any]) -> None:
-    """Insert a new access request into ClickHouse."""
+    """
+    Insert a new access request into ClickHouse.
+
+    Args:
+        client: Connected ClickHouse client instance.
+        request: Access request dictionary from generate_access_request().
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If insert fails.
+    """
     column_names = [
         "request_id", "tenant_id", "person_id", "requester_id", "location_id",
         "request_type", "access_level", "justification", "status",
@@ -253,7 +370,23 @@ def insert_access_request(client: clickhouse_connect.driver.Client, request: dic
 
 
 def fetch_pending_requests(client: clickhouse_connect.driver.Client, limit: int = 50) -> list[dict[str, Any]]:
-    """Fetch pending access requests that can be updated."""
+    """
+    Fetch pending access requests that can be updated.
+
+    Queries for requests in transitional states (submitted, pending_approval,
+    approved) that are eligible for workflow progression.
+
+    Args:
+        client: Connected ClickHouse client instance.
+        limit: Maximum number of requests to fetch (default 50).
+
+    Returns:
+        List of request dictionaries containing request_id, tenant_id,
+        person_id, status, submitted_at, and sla_hours.
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If query fails.
+    """
     result = client.query(f"""
         SELECT request_id, tenant_id, person_id, status, submitted_at, sla_hours
         FROM piam.fact_access_requests FINAL
@@ -282,7 +415,25 @@ def update_access_request(
 ) -> str | None:
     """
     Progress a pending request through the workflow.
-    Returns the new status or None if no update.
+
+    Advances a request to its next state based on probabilistic transitions:
+        - submitted -> pending_approval (80% chance)
+        - pending_approval -> approved (70%) or rejected (15%)
+        - approved -> provisioned (85%)
+
+    Uses INSERT with SELECT to update the ReplacingMergeTree table,
+    which handles deduplication by request_id.
+
+    Args:
+        client: Connected ClickHouse client instance.
+        request: Request dictionary from fetch_pending_requests().
+        ref_data: Reference data for selecting approvers.
+
+    Returns:
+        New status string if the request was updated, None if no change.
+
+    Raises:
+        clickhouse_connect.driver.exceptions.DatabaseError: If update fails.
     """
     current_status = request["status"]
     now = datetime.utcnow()
@@ -366,7 +517,20 @@ def update_access_request(
     return new_status
 
 
-def main():
+def main() -> None:
+    """
+    Main entry point for the simple trickle data generator.
+
+    Parses command-line arguments, establishes ClickHouse connection,
+    fetches reference data, and runs the continuous generation loop
+    for both access events and access requests.
+
+    The main loop:
+        1. Generates a batch of access events
+        2. Optionally creates new access requests (based on request_rate)
+        3. Periodically progresses pending requests through workflow
+        4. Reports statistics for each batch
+    """
     parser = argparse.ArgumentParser(description="Trickle synthetic access events and requests into ClickHouse")
     parser.add_argument("--host", type=str, default="localhost", help="ClickHouse host")
     parser.add_argument("--port", type=int, default=8123, help="ClickHouse HTTP port")
@@ -403,7 +567,7 @@ def main():
         print("No persons found. Run 'make generate' first.")
         sys.exit(1)
 
-    print(f"\nStarting trickle mode:")
+    print("\nStarting trickle mode:")
     print(f"  Access events: {args.events_per_batch}/batch")
     print(f"  Access requests: {'disabled' if args.no_requests else f'{args.request_rate:.0%} chance/batch'}")
     print(f"  Interval: {args.interval}s")
@@ -475,7 +639,7 @@ def main():
             traceback.print_exc()
             time.sleep(args.interval)
 
-    print(f"\n--- Summary ---")
+    print("\n--- Summary ---")
     print(f"Access Events: {total_events} (Grants: {total_grants}, Denies: {total_denies})")
     print(f"Access Requests: {total_requests_new} new, {total_requests_updated} updated")
 

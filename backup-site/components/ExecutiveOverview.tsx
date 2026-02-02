@@ -1,7 +1,44 @@
+/**
+ * ExecutiveOverview - High-Level Security Metrics Dashboard for Executives
+ *
+ * This component presents a strategic view of physical access security
+ * posture for C-level executives and senior leadership. It aggregates
+ * key metrics including overall risk score, compliance rate, open incidents,
+ * and site status into a single, scannable dashboard.
+ *
+ * @component
+ * @example
+ * <ExecutiveOverview tenant="acme" timeRange="24h" />
+ * <ExecutiveOverview tenant="buildright" useLiveData={true} timeRange="15m" />
+ *
+ * Architecture Notes:
+ * - KPI cards use gradient backgrounds for visual hierarchy and quick scanning
+ * - Time range selector supports 15m, 60m, and 24h views for trend analysis
+ * - Risk trend chart shows correlation between risk score and incident count
+ * - Site risk horizontal bar chart enables quick identification of problem areas
+ * - Compliance donut chart with legend for identity compliance status
+ * - Recent alerts panel highlights critical/high priority security events
+ * - All charts disable animations for consistent rendering and performance
+ *
+ * Data Flow:
+ * - timeRange prop determines which risk trend dataset to display
+ * - getRiskTrendData() selects appropriate time-series based on timeRange
+ * - complianceData static array feeds pie chart and stats calculation
+ * - siteRiskData static array provides per-site risk distribution
+ * - Alert data inline for recent high-priority security events
+ *
+ * @param {ExecutiveOverviewProps} props - Component props
+ * @param {string} props.tenant - The tenant identifier
+ * @param {boolean} [props.useLiveData=false] - Whether to use live data (future use)
+ * @param {'15m' | '60m' | '24h'} [props.timeRange='24h'] - Time range for trend data
+ */
 'use client';
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 
+/**
+ * Props for the ExecutiveOverview component
+ */
 interface ExecutiveOverviewProps {
   tenant: string;
   useLiveData?: boolean;

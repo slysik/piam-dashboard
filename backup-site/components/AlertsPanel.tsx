@@ -1,7 +1,43 @@
+/**
+ * AlertsPanel - Security Insights and Anomaly Alert Display
+ *
+ * This component renders a list of security alerts and insights organized
+ * by severity level. It provides real-time security awareness through
+ * color-coded alert cards with dynamic "time ago" timestamps that update
+ * automatically.
+ *
+ * @component
+ * @example
+ * <AlertsPanel alerts={[
+ *   { id: '1', severity: 'critical', title: 'Impossible travel detected',
+ *     description: 'Badge used in NY and LA within 30 minutes',
+ *     timestamp: new Date() }
+ * ]} />
+ *
+ * Architecture Notes:
+ * - Four severity levels: critical, high, medium, low - each with distinct styling
+ * - Severity icons: !! (critical), ! (high), * (medium), i (low)
+ * - TimeAgo component auto-updates every minute for live timestamps
+ * - Color scheme follows security convention (red=critical, orange=high, etc.)
+ * - Uses custom Anthropic design tokens for muted text colors
+ * - formatTimeAgo helper handles seconds, minutes, hours, and days
+ *
+ * Data Flow:
+ * - alerts prop: Array of Alert objects from parent component
+ * - Each alert has: id, severity, title, description, timestamp (Date object)
+ * - TimeAgo component maintains its own state for real-time updates
+ * - Updates via setInterval every 60 seconds to refresh relative times
+ *
+ * @param {AlertsPanelProps} props - Component props
+ * @param {Alert[]} props.alerts - Array of security alerts to display
+ */
 'use client';
 
 import { useState, useEffect } from 'react';
 
+/**
+ * Security alert data structure
+ */
 interface Alert {
   id: string;
   severity: 'critical' | 'high' | 'medium' | 'low';

@@ -1,4 +1,47 @@
 #!/bin/bash
+# =============================================================================
+# Load Data - Import CSV Data into ClickHouse Tables
+# =============================================================================
+#
+# Purpose:
+#   Loads dimension and fact table data from CSV files into ClickHouse.
+#   Truncates existing data before loading to ensure clean state.
+#   Displays row counts after successful import.
+#
+# Prerequisites:
+#   - Docker must be running
+#   - ClickHouse container (piam-clickhouse) must be up and healthy
+#   - CSV files must exist in clickhouse/data/ directory
+#   - Tables must already be created in ClickHouse (piam database)
+#
+# Usage:
+#   ./scripts/load-data.sh
+#
+# Examples:
+#   ./scripts/load-data.sh
+#
+# Data Files Expected:
+#   Dimensions:
+#     - clickhouse/data/dim_tenant.csv
+#     - clickhouse/data/dim_site.csv
+#     - clickhouse/data/dim_location.csv
+#     - clickhouse/data/dim_person.csv
+#     - clickhouse/data/dim_entitlement.csv
+#   Facts:
+#     - clickhouse/data/fact_access_events.csv
+#     - clickhouse/data/fact_connector_health.csv
+#     - clickhouse/data/fact_compliance_status.csv
+#     - clickhouse/data/fact_access_requests.csv
+#
+# Exit Codes:
+#   0 - Data loaded successfully
+#   1 - Error during data load (set -e causes immediate exit)
+#
+# Notes:
+#   - Missing CSV files are skipped with a warning message
+#   - Existing table data is truncated before loading
+#   - CSV files must include headers (CSVWithNames format)
+# =============================================================================
 set -e
 
 DATA_DIR="clickhouse/data"

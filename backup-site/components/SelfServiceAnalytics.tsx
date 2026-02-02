@@ -1,8 +1,46 @@
+/**
+ * SelfServiceAnalytics - Access Request Workflow Analytics Dashboard
+ *
+ * This component provides visibility into the self-service access request
+ * workflow, showing request funnel metrics, SLA performance by zone,
+ * weekly trends, and a detailed request queue. It helps IT/HR and
+ * security teams monitor request processing efficiency and identify
+ * bottlenecks in the approval workflow.
+ *
+ * @component
+ * @example
+ * <SelfServiceAnalytics tenant="acme" />
+ *
+ * Architecture Notes:
+ * - Request funnel horizontal bar chart shows pipeline stages
+ * - SLA by Zone chart compares actual vs target approval times
+ * - Weekly trend line chart tracks requests submitted vs approved
+ * - Filter toggles: all, pending (needs attention), high-risk (security review)
+ * - KPI cards: Pending count, High-Risk Pending, Avg Approval Time, Approval Rate
+ * - Request table shows detailed queue with risk level and timing
+ * - Status colors: Approved (green), Pending (amber), Rejected (red)
+ * - Risk colors: High (red), Medium (amber), Low (green)
+ *
+ * Data Flow:
+ * - tenant prop for future multi-tenant data support
+ * - funnelData: Static array of request stages with counts and colors
+ * - slaData: Zone-specific average hours vs target benchmarks
+ * - weeklyTrend: Four-week history of request volumes
+ * - accessRequests: Detailed request records with full metadata
+ * - Computed stats: pendingCount, highRiskPending, avgApprovalTime
+ * - filter state controls which requests appear in the table
+ *
+ * @param {SelfServiceAnalyticsProps} props - Component props
+ * @param {string} props.tenant - The tenant identifier (for future data filtering)
+ */
 'use client';
 
 import { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
 
+/**
+ * Props for the SelfServiceAnalytics component
+ */
 interface SelfServiceAnalyticsProps {
   tenant: string;
 }

@@ -1,8 +1,47 @@
+/**
+ * ComplianceView - Workforce Compliance and Audit Dashboard
+ *
+ * This component provides a comprehensive compliance management interface
+ * for tracking personnel certifications, safety training, background checks,
+ * and site inductions. It includes an Audit Mode for generating compliance
+ * evidence and identifying lifecycle exceptions.
+ *
+ * @component
+ * @example
+ * <ComplianceView tenant="acme" />
+ * <ComplianceView tenant="buildright" useLiveData={true} />
+ *
+ * Architecture Notes:
+ * - Multi-view dashboard: KPI cards, pie chart by type, expiring timeline bar chart
+ * - Audit Mode toggle reveals privileged access evidence and lifecycle exceptions
+ * - CSV export functionality for compliance, privileged access, and exceptions reports
+ * - Filter by person type (all vs contractor) and date range (7d, 30d, 90d)
+ * - Status tracking: Compliant, Expiring, Expired, Non-Compliant
+ * - Requirement types: Safety Training, Background Check, Site Induction, Certification
+ * - Side drawer shows detailed compliance info with avatar and status badge
+ * - Timeline chart shows upcoming expirations by week for proactive management
+ *
+ * Data Flow:
+ * - tenant prop selects data from contractorData record
+ * - Filter state (personType, dateRange) narrows displayed contractor list
+ * - auditMode boolean reveals privileged access and lifecycle exception tables
+ * - Stats computed dynamically from filtered contractor array
+ * - CSV export generates file download with current date stamp
+ * - requirementPieData aggregated from contractor requirement types
+ * - expiringTimelineData computed for 8-week lookahead
+ *
+ * @param {ComplianceViewProps} props - Component props
+ * @param {string} props.tenant - The tenant identifier for data filtering
+ * @param {boolean} [props.useLiveData=false] - Whether to use live data (future use)
+ */
 'use client';
 
 import { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 
+/**
+ * Props for the ComplianceView component
+ */
 interface ComplianceViewProps {
   tenant: string;
   useLiveData?: boolean;
@@ -78,17 +117,24 @@ const REQUIREMENT_COLORS: Record<string, string> = {
 };
 
 export default function ComplianceView({ tenant, useLiveData = false }: ComplianceViewProps) {
+  // Selected contractor for detail drawer
   const [selectedContractor, setSelectedContractor] = useState<Contractor | null>(null);
+  // Export in progress flag to disable buttons
   const [exporting, setExporting] = useState(false);
+  // Filter by person type (all or contractors only)
   const [personType, setPersonType] = useState<'all' | 'contractor'>('all');
+  // Audit mode reveals privileged access evidence and lifecycle exceptions
   const [auditMode, setAuditMode] = useState(false);
+  // Date range filter (affects which data would be shown in real implementation)
   const [dateRange, setDateRange] = useState<'7d' | '30d' | '90d'>('30d');
-  
+
   const allContractors = contractorData[tenant] || contractorData.acme;
-  const contractors = personType === 'all' 
-    ? allContractors 
+  // Apply person type filter
+  const contractors = personType === 'all'
+    ? allContractors
     : allContractors.filter(c => c.personType === personType);
-  
+
+  // Compute compliance status counts for KPI cards
   const stats = {
     compliant: contractors.filter(c => c.status === 'Compliant').length,
     expiring: contractors.filter(c => c.status === 'Expiring').length,
@@ -96,6 +142,7 @@ export default function ComplianceView({ tenant, useLiveData = false }: Complian
     nonCompliant: contractors.filter(c => c.status === 'Non-Compliant').length,
   };
 
+  // Aggregate contractors by requirement type for pie chart
   const requirementPieData = Object.entries(
     contractors.reduce((acc, c) => {
       acc[c.requirementType] = (acc[c.requirementType] || 0) + 1;
@@ -103,29 +150,33 @@ export default function ComplianceView({ tenant, useLiveData = false }: Complian
     }, {} as Record<string, number>)
   ).map(([name, value]) => ({ name, value, color: REQUIREMENT_COLORS[name] || '#6b7280' }));
 
+  // Filter to contractors expiring within 60 days, sorted by urgency
   const expiringContractors = contractors
     .filter(c => c.daysUntilExpiry > 0 && c.daysUntilExpiry <= 60)
     .sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry);
 
+  // Generate week label for timeline chart x-axis
   const getWeekLabel = (daysFromNow: number) => {
     const date = new Date();
     date.setDate(date.getDate() + daysFromNow);
     return `${date.getMonth() + 1}/${date.getDate()}`;
   };
 
+  // Build 6-week timeline of upcoming expirations for bar chart
   const expiringTimelineData = Array.from({ length: 8 }, (_, weekIdx) => {
     const weekStart = weekIdx * 7;
     const weekEnd = weekStart + 7;
-    const count = expiringContractors.filter(c => 
+    const count = expiringContractors.filter(c =>
       c.daysUntilExpiry > weekStart && c.daysUntilExpiry <= weekEnd
     ).length;
     return {
-      date: getWeekLabel(weekStart + 3),
+      date: getWeekLabel(weekStart + 3), // Use mid-week date for label
       count,
     };
-  }).slice(0, 6);
+  }).slice(0, 6); // Only show 6 weeks
 
-  const nonCompliantList = contractors.filter(c => 
+  // Filter for the non-compliant/expiring personnel table
+  const nonCompliantList = contractors.filter(c =>
     c.status === 'Expired' || c.status === 'Expiring' || c.status === 'Non-Compliant'
   );
 

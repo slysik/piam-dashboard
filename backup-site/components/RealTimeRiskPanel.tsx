@@ -1,7 +1,54 @@
+/**
+ * RealTimeRiskPanel - Live Event Stream and Risk Monitoring Dashboard
+ *
+ * This component provides a real-time view of access events with anomaly
+ * detection and risk scoring. It displays a live event stream, top risk
+ * identities, top risk doors, and enables drill-down into individual
+ * identity "anomaly stories" for investigation. Video evidence integration
+ * supports forensic review of flagged events.
+ *
+ * @component
+ * @example
+ * <RealTimeRiskPanel
+ *   tenant="acme"
+ *   isStreaming={isLiveStreamActive}
+ *   onToggleStream={() => setIsLiveStreamActive(!isLiveStreamActive)}
+ * />
+ *
+ * Architecture Notes:
+ * - Live streaming mode generates new events every 15 seconds when active
+ * - Event stream maintains rolling buffer of 50 events maximum
+ * - Anomaly types: is_after_hours, denied_streak, impossible_travel,
+ *   unusual_zone, expired_credential
+ * - Risk scores: color-coded red (>=70), amber (>=40), green (<40)
+ * - Filter toggles: all, denies only, anomalies only
+ * - Video modal for accessing associated camera footage (VMS integration)
+ * - Identity drawer shows 24h anomaly timeline with video indicators
+ * - Top risk sidebars: Top 4 identities and Top 3 doors by risk score
+ *
+ * Data Flow:
+ * - isStreaming prop: Controls whether new events are generated
+ * - onToggleStream callback: Parent controls stream start/stop
+ * - events state: Array of LiveEvent objects, prepended on generation
+ * - generateRandomEvent(): Creates synthetic events with random anomalies
+ * - selectedIdentity state: Triggers anomaly story drawer
+ * - showVideoModal state: Triggers video evidence modal
+ * - topRiskIdentities/topRiskDoors: Static demo data for risk rankings
+ * - Event counter increments to ensure unique event IDs
+ *
+ * @param {RealTimeRiskPanelProps} props - Component props
+ * @param {string} props.tenant - Tenant identifier
+ * @param {boolean} props.isStreaming - Whether live stream is active
+ * @param {() => void} props.onToggleStream - Callback to toggle streaming
+ * @param {boolean} [props.useLiveData=false] - Future live data integration flag
+ */
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 
+/**
+ * Props for the RealTimeRiskPanel component
+ */
 interface RealTimeRiskPanelProps {
   tenant: string;
   isStreaming: boolean;
@@ -55,23 +102,36 @@ const sampleVideoUrls = [
   '/clips/badge-denied-entry.mp4',
 ];
 
+/**
+ * Generates a synthetic access event with randomized properties for demo streaming.
+ * Event characteristics are probabilistically assigned to simulate realistic patterns:
+ * - 15% denial rate
+ * - 25% chance of anomaly flags
+ * - 70% chance of associated video clip
+ * - Risk score higher (60-100) for anomalous events, lower (10-40) for normal
+ */
 const generateRandomEvent = (id: number): LiveEvent => {
   const person = samplePeople[Math.floor(Math.random() * samplePeople.length)];
   const doorInfo = sampleDoors[Math.floor(Math.random() * sampleDoors.length)];
+  // 15% of events are denials to simulate realistic access patterns
   const isDeny = Math.random() < 0.15;
+  // 25% of events have at least one anomaly flag
   const hasAnomaly = Math.random() < 0.25;
   const anomalies: string[] = [];
 
+  // Assign 1-2 random anomaly types if event is flagged as anomalous
   if (hasAnomaly) {
     const numAnomalies = Math.floor(Math.random() * 2) + 1;
     for (let i = 0; i < numAnomalies; i++) {
       const anomaly = anomalyTypes[Math.floor(Math.random() * anomalyTypes.length)];
+      // Prevent duplicate anomaly flags on same event
       if (!anomalies.includes(anomaly)) anomalies.push(anomaly);
     }
   }
 
   const now = new Date();
   const timestamp = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  // 70% of events have associated video footage
   const hasVideo = Math.random() > 0.3;
 
   return {
@@ -83,6 +143,7 @@ const generateRandomEvent = (id: number): LiveEvent => {
     site: doorInfo.site,
     result: isDeny ? 'DENY' : 'GRANT',
     anomalyFlags: anomalies,
+    // Risk score: 60-100 for anomalous events, 10-40 for normal events
     riskScore: anomalies.length > 0 ? Math.floor(Math.random() * 40) + 60 : Math.floor(Math.random() * 30) + 10,
     hasVideo,
     videoUrl: hasVideo ? sampleVideoUrls[Math.floor(Math.random() * sampleVideoUrls.length)] : undefined,

@@ -1,8 +1,39 @@
+/**
+ * GenAIView - AI-powered Custom Dashboard Builder
+ *
+ * This component provides a drag-and-drop interface for building custom
+ * dashboards from a library of pre-built report widgets. Users can select
+ * from KPIs, charts, tables, and alert widgets to compose personalized
+ * analytics views for physical identity and access management.
+ *
+ * @component
+ * @example
+ * <GenAIView />
+ *
+ * Architecture Notes:
+ * - Uses HTML5 drag-and-drop API for intuitive widget placement
+ * - Widget library is organized by category (KPIs, Charts, Tables, Alerts)
+ * - Supports both drag-and-drop and click-to-add interactions
+ * - Widget data (kpiData, chartConfigs, tableData, alertData) is defined as
+ *   static constants - in production, these would come from API endpoints
+ * - Each widget type has its own render logic within renderWidget()
+ * - Charts use Recharts library with disabled animations for performance
+ *
+ * Data Flow:
+ * - availableReports: Static list of all available widget definitions
+ * - dashboardWidgets: State array of widget IDs currently on the dashboard
+ * - User drags from widget library (left panel) to dashboard (right panel)
+ * - renderWidget() maps widget IDs to their visual representation using
+ *   the appropriate data source (kpiData, chartConfigs, tableData, alertData)
+ */
 'use client';
 
 import { useState } from 'react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+/**
+ * Configuration for a report widget in the library
+ */
 interface ReportWidget {
   id: string;
   name: string;
@@ -141,20 +172,26 @@ const alertData: Record<string, { severity: string; title: string; description: 
 };
 
 export default function GenAIView() {
+  // Track which widgets are currently placed on the custom dashboard
   const [dashboardWidgets, setDashboardWidgets] = useState<string[]>([]);
+  // Track the widget being dragged for visual feedback
   const [draggedWidget, setDraggedWidget] = useState<string | null>(null);
+  // Filter library by category (All, KPIs, Charts, Tables, Alerts)
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
+  // HTML5 Drag-and-Drop handlers
   const handleDragStart = (widgetId: string) => {
     setDraggedWidget(widgetId);
   };
 
   const handleDragOver = (e: React.DragEvent) => {
+    // Must prevent default to allow drop
     e.preventDefault();
   };
 
   const handleDropOnDashboard = (e: React.DragEvent) => {
     e.preventDefault();
+    // Only add if widget isn't already on dashboard (prevent duplicates)
     if (draggedWidget && !dashboardWidgets.includes(draggedWidget)) {
       setDashboardWidgets([...dashboardWidgets, draggedWidget]);
     }
@@ -165,16 +202,22 @@ export default function GenAIView() {
     setDashboardWidgets(dashboardWidgets.filter(id => id !== widgetId));
   };
 
+  // Click-to-add alternative to drag-and-drop for accessibility
   const addWidget = (widgetId: string) => {
     if (!dashboardWidgets.includes(widgetId)) {
       setDashboardWidgets([...dashboardWidgets, widgetId]);
     }
   };
 
-  const filteredReports = selectedCategory === 'All' 
-    ? availableReports 
+  // Filter available reports based on selected category
+  const filteredReports = selectedCategory === 'All'
+    ? availableReports
     : availableReports.filter(r => r.category === selectedCategory);
 
+  /**
+   * Renders a widget based on its type (kpi, chart, table, alert)
+   * Looks up widget config and data from the static data stores
+   */
   const renderWidget = (widgetId: string) => {
     const widget = availableReports.find(r => r.id === widgetId);
     if (!widget) return null;

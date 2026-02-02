@@ -1,5 +1,145 @@
+/**
+ * Trickle API - Live Event Stream Generator
+ *
+ * Generates and inserts simulated PIAM (Physical Identity and Access Management)
+ * access events into ClickHouse for demonstration and testing purposes. This endpoint
+ * creates realistic access control events with randomized data including door access
+ * attempts, grants/denials, anomaly detection, and associated video clips.
+ *
+ * @module api/trickle
+ *
+ * ## Purpose
+ *
+ * This API is designed for:
+ * - Demo environments requiring realistic data flow
+ * - Testing dashboard visualizations with live data
+ * - Load testing the ClickHouse ingestion pipeline
+ * - Simulating access control scenarios
+ *
+ * ## Generated Data
+ *
+ * Each event includes:
+ * - Person identification (ID, name, badge)
+ * - Location data (door, coordinates, building area)
+ * - Access result (grant/deny with reason)
+ * - PACS connector information (Lenel, C-CURE, S2, Genetec)
+ * - Risk scoring and anomaly detection flags
+ * - Optional video clip URLs
+ *
+ * ## Environment Variables
+ *
+ * Same as `/api/clickhouse`:
+ * - `CLICKHOUSE_URL` or `CLICKHOUSE_HOST`/`CLICKHOUSE_PORT`
+ * - `CLICKHOUSE_USER` (default: 'default')
+ * - `CLICKHOUSE_PASSWORD` (default: '')
+ *
+ * @endpoint POST /api/trickle
+ *
+ * @example
+ * // Start event generation (inserts 5-14 random events)
+ * curl -X POST http://localhost:3000/api/trickle \
+ *   -H "Content-Type: application/json" \
+ *   -d '{"action": "start"}'
+ *
+ * @example
+ * // Generate events for specific tenant
+ * curl -X POST http://localhost:3000/api/trickle \
+ *   -H "Content-Type: application/json" \
+ *   -d '{"action": "start", "tenant": "demo-corp"}'
+ *
+ * @example
+ * // Continuous trickle (call repeatedly with interval)
+ * # In bash:
+ * while true; do
+ *   curl -X POST http://localhost:3000/api/trickle \
+ *     -H "Content-Type: application/json" \
+ *     -d '{"action": "start"}' && sleep 5
+ * done
+ */
 import { NextRequest, NextResponse } from 'next/server';
 
+/**
+ * Handles POST requests to generate and insert simulated access events.
+ *
+ * @async
+ * @function POST
+ * @param {NextRequest} request - The incoming HTTP request
+ *
+ * @requestBody
+ * ```typescript
+ * {
+ *   action: 'start';     // Action to perform (required, only 'start' supported)
+ *   tenant?: string;     // Tenant identifier (default: 'acme-corp')
+ * }
+ * ```
+ *
+ * @returns {Promise<NextResponse>} JSON response with insertion results or error
+ *
+ * @response 200 - Success
+ * ```typescript
+ * {
+ *   success: true,
+ *   eventsInserted: number,  // Number of events inserted (5-14)
+ *   message: string          // "Inserted N events"
+ * }
+ * ```
+ *
+ * @response 400 - Invalid Action
+ * ```typescript
+ * {
+ *   error: "Unknown action"
+ * }
+ * ```
+ *
+ * @response 500 - Database Error
+ * ```typescript
+ * {
+ *   error: string  // ClickHouse error message
+ * }
+ * ```
+ *
+ * @response 500 - Server Error
+ * ```typescript
+ * {
+ *   error: string  // "Trickle failed: <error message>"
+ * }
+ * ```
+ *
+ * ## Generated Event Schema
+ *
+ * Events are inserted into `piam.access_events` with these fields:
+ *
+ * | Field | Type | Description |
+ * |-------|------|-------------|
+ * | event_id | UUID | Auto-generated unique identifier |
+ * | tenant_id | String | Tenant identifier |
+ * | event_time | DateTime64(3) | Current timestamp with milliseconds |
+ * | person_id | String | Person identifier (P100-P999) |
+ * | person_name | String | Full name from sample list |
+ * | badge_id | String | Badge number (B1000-B9999) |
+ * | location_id | String | Location identifier (L0-L19) |
+ * | location_name | String | Human-readable location name |
+ * | door_id | String | Door identifier (D0-D49) |
+ * | lat | Float64 | Latitude coordinate |
+ * | lon | Float64 | Longitude coordinate |
+ * | result | String | 'grant' or 'deny' |
+ * | deny_reason | Nullable(String) | Reason if denied |
+ * | connector_id | String | PACS connector ID |
+ * | pacs_type | String | PACS system type |
+ * | suspicious_flag | UInt8 | 0 or 1 |
+ * | anomaly_type | Nullable(String) | Type of anomaly detected |
+ * | risk_score | UInt8 | 0-100 risk score |
+ * | video_clip_url | Nullable(String) | Associated video clip URL |
+ * | raw_payload | String | Empty object '{}' |
+ *
+ * ## Probability Distribution
+ *
+ * - ~85% of events are 'grant', ~15% are 'deny'
+ * - ~30% of denied events are flagged as suspicious
+ * - ~70% of events have associated video clips
+ *
+ * @throws {Error} When ClickHouse connection or insertion fails
+ */
 export async function POST(request: NextRequest) {
   try {
     const { action, tenant = 'acme-corp' } = await request.json();
