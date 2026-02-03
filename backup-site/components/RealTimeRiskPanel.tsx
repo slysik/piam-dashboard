@@ -2,58 +2,18 @@
  * RealTimeRiskPanel - Live Event Stream and Risk Monitoring Dashboard
  *
  * This component provides a real-time view of access events with anomaly
- * detection and risk scoring. It displays a live event stream, top risk
- * identities, top risk doors, and enables drill-down into individual
- * identity "anomaly stories" for investigation. Video evidence integration
- * supports forensic review of flagged events.
+ * detection and risk scoring. Connected to ClickHouse via CDC pipeline.
  *
  * @component
- * @example
- * <RealTimeRiskPanel
- *   tenant="acme"
- *   isStreaming={isLiveStreamActive}
- *   onToggleStream={() => setIsLiveStreamActive(!isLiveStreamActive)}
- * />
- *
- * Architecture Notes:
- * - Live streaming mode generates new events every 15 seconds when active
- * - Event stream maintains rolling buffer of 50 events maximum
- * - Anomaly types: is_after_hours, denied_streak, impossible_travel,
- *   unusual_zone, expired_credential
- * - Risk scores: color-coded red (>=70), amber (>=40), green (<40)
- * - Filter toggles: all, denies only, anomalies only
- * - Video modal for accessing associated camera footage (VMS integration)
- * - Identity drawer shows 24h anomaly timeline with video indicators
- * - Top risk sidebars: Top 4 identities and Top 3 doors by risk score
- *
- * Data Flow:
- * - isStreaming prop: Controls whether new events are generated
- * - onToggleStream callback: Parent controls stream start/stop
- * - events state: Array of LiveEvent objects, prepended on generation
- * - generateRandomEvent(): Creates synthetic events with random anomalies
- * - selectedIdentity state: Triggers anomaly story drawer
- * - showVideoModal state: Triggers video evidence modal
- * - topRiskIdentities/topRiskDoors: Static demo data for risk rankings
- * - Event counter increments to ensure unique event IDs
- *
- * @param {RealTimeRiskPanelProps} props - Component props
- * @param {string} props.tenant - Tenant identifier
- * @param {boolean} props.isStreaming - Whether live stream is active
- * @param {() => void} props.onToggleStream - Callback to toggle streaming
- * @param {boolean} [props.useLiveData=false] - Future live data integration flag
  */
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { queryClickHouse } from '@/lib/clickhouse';
 
-/**
- * Props for the RealTimeRiskPanel component
- */
 interface RealTimeRiskPanelProps {
   tenant: string;
-  isStreaming: boolean;
-  onToggleStream: () => void;
-  useLiveData?: boolean;
+  useLiveData: boolean;
 }
 
 interface LiveEvent {
@@ -70,87 +30,17 @@ interface LiveEvent {
   videoUrl?: string;
 }
 
-const anomalyTypes = [
-  'is_after_hours',
-  'denied_streak',
-  'impossible_travel',
-  'unusual_zone',
-  'expired_credential',
+// Demo data for when Live Data is OFF
+const demoEvents: LiveEvent[] = [
+  { id: 'demo-1', timestamp: '10:55:18', person: 'Jane Doe', badge: 'B123456', door: 'Main Tower F1 D1', site: 'HQ Tower', result: 'DENY', anomalyFlags: ['is_after_hours'], riskScore: 78, hasVideo: true },
+  { id: 'demo-2', timestamp: '10:52:33', person: 'John Smith', badge: 'B234567', door: 'Server Room D1', site: 'Data Center', result: 'GRANT', anomalyFlags: [], riskScore: 15, hasVideo: true },
+  { id: 'demo-3', timestamp: '10:49:12', person: 'Bob Wilson', badge: 'B345678', door: 'Parking Garage D1', site: 'HQ Tower', result: 'GRANT', anomalyFlags: [], riskScore: 12, hasVideo: false },
+  { id: 'demo-4', timestamp: '10:45:55', person: 'Alice Brown', badge: 'B456789', door: 'R&D Lab D2', site: 'R&D Lab', result: 'DENY', anomalyFlags: ['unusual_zone', 'denied_streak'], riskScore: 85, hasVideo: true },
+  { id: 'demo-5', timestamp: '10:42:08', person: 'Charlie Davis', badge: 'B567890', door: 'Main Tower F2 D3', site: 'HQ Tower', result: 'GRANT', anomalyFlags: [], riskScore: 22, hasVideo: true },
+  { id: 'demo-6', timestamp: '10:38:44', person: 'Diana Evans', badge: 'B678901', door: 'Warehouse A D1', site: 'Warehouse A', result: 'GRANT', anomalyFlags: [], riskScore: 18, hasVideo: false },
+  { id: 'demo-7', timestamp: '10:35:21', person: 'Edward Foster', badge: 'B789012', door: 'Executive Suite D1', site: 'HQ Tower', result: 'DENY', anomalyFlags: ['impossible_travel'], riskScore: 92, hasVideo: true },
+  { id: 'demo-8', timestamp: '10:31:56', person: 'Fiona Garcia', badge: 'B890123', door: 'Equipment Yard D1', site: 'Warehouse A', result: 'GRANT', anomalyFlags: [], riskScore: 25, hasVideo: true },
 ];
-
-const samplePeople = [
-  'John Smith', 'Jane Doe', 'Bob Wilson', 'Alice Brown', 'Charlie Davis',
-  'Diana Evans', 'Edward Foster', 'Fiona Garcia', 'George Harris', 'Helen Irving',
-  'Ivan Petrov', 'Julia Chen', 'Kevin Wright', 'Laura Martinez', 'Michael Thompson',
-];
-
-const sampleDoors = [
-  { door: 'Main Tower F1 D1', site: 'HQ Tower' },
-  { door: 'Main Tower F2 D3', site: 'HQ Tower' },
-  { door: 'Server Room D1', site: 'Data Center' },
-  { door: 'Warehouse A D1', site: 'Warehouse A' },
-  { door: 'R&D Lab D2', site: 'R&D Lab' },
-  { door: 'Parking Garage D1', site: 'HQ Tower' },
-  { door: 'Executive Suite D1', site: 'HQ Tower' },
-  { door: 'Equipment Yard D1', site: 'Warehouse A' },
-];
-
-// Sample video URLs for demo - these can be replaced with real VMS footage
-const sampleVideoUrls = [
-  '/clips/badge-access-lobby.mp4',
-  '/clips/badge-access-server-room.mp4',
-  '/clips/badge-denied-entry.mp4',
-];
-
-/**
- * Generates a synthetic access event with randomized properties for demo streaming.
- * Event characteristics are probabilistically assigned to simulate realistic patterns:
- * - 15% denial rate
- * - 25% chance of anomaly flags
- * - 70% chance of associated video clip
- * - Risk score higher (60-100) for anomalous events, lower (10-40) for normal
- */
-const generateRandomEvent = (id: number): LiveEvent => {
-  const person = samplePeople[Math.floor(Math.random() * samplePeople.length)];
-  const doorInfo = sampleDoors[Math.floor(Math.random() * sampleDoors.length)];
-  // 15% of events are denials to simulate realistic access patterns
-  const isDeny = Math.random() < 0.15;
-  // 25% of events have at least one anomaly flag
-  const hasAnomaly = Math.random() < 0.25;
-  const anomalies: string[] = [];
-
-  // Assign 1-2 random anomaly types if event is flagged as anomalous
-  if (hasAnomaly) {
-    const numAnomalies = Math.floor(Math.random() * 2) + 1;
-    for (let i = 0; i < numAnomalies; i++) {
-      const anomaly = anomalyTypes[Math.floor(Math.random() * anomalyTypes.length)];
-      // Prevent duplicate anomaly flags on same event
-      if (!anomalies.includes(anomaly)) anomalies.push(anomaly);
-    }
-  }
-
-  const now = new Date();
-  const timestamp = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-  // 70% of events have associated video footage
-  const hasVideo = Math.random() > 0.3;
-
-  return {
-    id: `evt-${id}-${Date.now()}`,
-    timestamp,
-    person,
-    badge: `B${Math.floor(Math.random() * 900000) + 100000}`,
-    door: doorInfo.door,
-    site: doorInfo.site,
-    result: isDeny ? 'DENY' : 'GRANT',
-    anomalyFlags: anomalies,
-    // Risk score: 60-100 for anomalous events, 10-40 for normal events
-    riskScore: anomalies.length > 0 ? Math.floor(Math.random() * 40) + 60 : Math.floor(Math.random() * 30) + 10,
-    hasVideo,
-    videoUrl: hasVideo ? sampleVideoUrls[Math.floor(Math.random() * sampleVideoUrls.length)] : undefined,
-  };
-};
-
-const initialEvents: LiveEvent[] = Array.from({ length: 15 }, (_, i) => generateRandomEvent(i));
 
 const topRiskIdentities = [
   { name: 'Jane Doe', score: 87, anomalies: 5, lastAnomaly: 'impossible_travel' },
@@ -165,24 +55,101 @@ const topRiskDoors = [
   { door: 'Executive Suite D1', site: 'HQ Tower', score: 68, denies: 5 },
 ];
 
-export default function RealTimeRiskPanel({ tenant, isStreaming, onToggleStream, useLiveData = false }: RealTimeRiskPanelProps) {
-  const [events, setEvents] = useState<LiveEvent[]>(initialEvents);
+export default function RealTimeRiskPanel({ tenant, useLiveData }: RealTimeRiskPanelProps) {
+  const [events, setEvents] = useState<LiveEvent[]>(demoEvents);
   const [selectedIdentity, setSelectedIdentity] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'denies' | 'anomalies'>('all');
-  const [eventCounter, setEventCounter] = useState(100);
   const [showVideoModal, setShowVideoModal] = useState<LiveEvent | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
 
+  const tenantId = tenant === 'acme' ? 'acme-corp' : 'buildright-construction';
+
+  // Fetch live events from ClickHouse
+  const fetchLiveEvents = useCallback(async () => {
+    if (!useLiveData) {
+      setEvents(demoEvents);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await queryClickHouse(`
+        SELECT
+          event_id as id,
+          formatDateTime(event_time, '%H:%i:%S') as timestamp,
+          coalesce(person_name, badge_id) as person,
+          badge_id as badge,
+          location_name as door,
+          coalesce(site_name, site_id) as site,
+          upper(result) as result,
+          suspicious_flag,
+          suspicious_reason,
+          coalesce(suspicious_score, 0) as riskScore,
+          raw_payload
+        FROM piam.v_recent_events
+        WHERE tenant_id = '${tenantId}'
+        ORDER BY event_time DESC
+        LIMIT 50
+      `);
+
+      if (Array.isArray(result) && result.length > 0) {
+        const mappedEvents: LiveEvent[] = result.map((row: Record<string, unknown>) => {
+          // Parse anomaly flags from suspicious_reason
+          const anomalyFlags: string[] = [];
+          const reason = String(row.suspicious_reason || '');
+          if (reason) {
+            if (reason.includes('UNUSUAL_HOURS') || reason.includes('AFTER_HOURS')) anomalyFlags.push('is_after_hours');
+            if (reason.includes('MULTIPLE_FAILURES') || reason.includes('DENIED')) anomalyFlags.push('denied_streak');
+            if (reason.includes('TAILGATING') || reason.includes('TRAVEL')) anomalyFlags.push('impossible_travel');
+            if (reason.includes('CREDENTIAL_SHARING') || reason.includes('UNUSUAL')) anomalyFlags.push('unusual_zone');
+            if (reason.includes('EXPIRED')) anomalyFlags.push('expired_credential');
+          }
+          // Add flag if suspicious but no specific reason
+          if (Number(row.suspicious_flag) === 1 && anomalyFlags.length === 0) {
+            anomalyFlags.push('unusual_zone');
+          }
+
+          // Calculate risk score (use suspicious_score or derive from result)
+          let riskScore = Number(row.riskScore || 0) * 100;
+          if (riskScore === 0) {
+            riskScore = anomalyFlags.length > 0 ? Math.floor(Math.random() * 40) + 60 : Math.floor(Math.random() * 30) + 10;
+          }
+
+          return {
+            id: String(row.id || ''),
+            timestamp: String(row.timestamp || ''),
+            person: String(row.person || 'Unknown'),
+            badge: String(row.badge || ''),
+            door: String(row.door || ''),
+            site: String(row.site || ''),
+            result: (String(row.result || 'GRANT').toUpperCase().includes('GRANT') ? 'GRANT' : 'DENY') as 'GRANT' | 'DENY',
+            anomalyFlags,
+            riskScore: Math.min(100, Math.max(0, Math.round(riskScore))),
+            hasVideo: Math.random() > 0.3, // 70% have video
+            videoUrl: undefined,
+          };
+        });
+        setEvents(mappedEvents);
+        setLastUpdate(new Date().toLocaleTimeString());
+      }
+    } catch (err) {
+      console.error('Failed to fetch live events:', err);
+      // Keep existing events on error
+    } finally {
+      setLoading(false);
+    }
+  }, [useLiveData, tenantId]);
+
+  // Initial fetch and 2-second refresh interval
   useEffect(() => {
-    if (!isStreaming) return;
+    fetchLiveEvents();
 
-    const interval = setInterval(() => {
-      setEventCounter(prev => prev + 1);
-      const newEvent = generateRandomEvent(eventCounter);
-      setEvents(prev => [newEvent, ...prev.slice(0, 49)]);
-    }, 15000);
+    if (!useLiveData) return;
 
+    const interval = setInterval(fetchLiveEvents, 2000);
     return () => clearInterval(interval);
-  }, [isStreaming, eventCounter]);
+  }, [fetchLiveEvents, useLiveData]);
 
   const filteredEvents = events.filter(e => {
     if (filter === 'denies') return e.result === 'DENY';
@@ -206,17 +173,16 @@ export default function RealTimeRiskPanel({ tenant, isStreaming, onToggleStream,
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <h2 className="text-lg font-semibold text-gray-900">Real-Time Risk & Anomaly Panel</h2>
-          <button
-            onClick={onToggleStream}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              isStreaming 
-                ? 'bg-green-500 text-white animate-pulse' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            <span className={`w-2 h-2 rounded-full ${isStreaming ? 'bg-white' : 'bg-gray-500'}`} />
-            <span>{isStreaming ? 'Live Streaming' : 'Start Live Feed'}</span>
-          </button>
+          {useLiveData && (
+            <div className="flex items-center space-x-2 text-xs text-gray-500">
+              <span className={`w-2 h-2 rounded-full ${loading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`} />
+              <span>Live • 2s refresh</span>
+              {lastUpdate && <span className="text-gray-400">• Updated {lastUpdate}</span>}
+            </div>
+          )}
+          {!useLiveData && (
+            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">Demo Data</span>
+          )}
         </div>
         <div className="flex items-center space-x-2 bg-gray-100 rounded-lg p-1">
           {(['all', 'denies', 'anomalies'] as const).map((f) => (
@@ -254,15 +220,15 @@ export default function RealTimeRiskPanel({ tenant, isStreaming, onToggleStream,
               </thead>
               <tbody>
                 {filteredEvents.map((event) => (
-                  <tr 
-                    key={event.id} 
+                  <tr
+                    key={event.id}
                     className={`border-t border-gray-100 hover:bg-gray-50 transition-colors ${
                       event.anomalyFlags.length > 0 ? 'bg-red-50' : ''
                     }`}
                   >
                     <td className="px-4 py-2 text-gray-500 font-mono text-xs">{event.timestamp}</td>
                     <td className="px-4 py-2">
-                      <button 
+                      <button
                         onClick={() => setSelectedIdentity(event.person)}
                         className="text-blue-600 hover:underline font-medium"
                       >
@@ -303,7 +269,7 @@ export default function RealTimeRiskPanel({ tenant, isStreaming, onToggleStream,
                     </td>
                     <td className="px-4 py-2">
                       {event.hasVideo ? (
-                        <button 
+                        <button
                           onClick={() => setShowVideoModal(event)}
                           className="text-blue-500 hover:text-blue-700"
                         >
@@ -327,7 +293,7 @@ export default function RealTimeRiskPanel({ tenant, isStreaming, onToggleStream,
             <h3 className="text-sm font-medium text-gray-700 mb-3">Top Risk Identities (24h)</h3>
             <div className="space-y-2">
               {topRiskIdentities.map((identity) => (
-                <div 
+                <div
                   key={identity.name}
                   onClick={() => setSelectedIdentity(identity.name)}
                   className="flex items-center justify-between p-2 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
@@ -439,27 +405,13 @@ export default function RealTimeRiskPanel({ tenant, isStreaming, onToggleStream,
                 <button onClick={() => setShowVideoModal(null)} className="text-gray-500 hover:text-gray-700 text-xl">✕</button>
               </div>
               <div className="bg-gray-900 aspect-video flex items-center justify-center">
-                {showVideoModal.videoUrl ? (
-                  <video
-                    key={showVideoModal.videoUrl}
-                    className="w-full h-full object-contain"
-                    controls
-                    autoPlay
-                    muted
-                    loop
-                  >
-                    <source src={showVideoModal.videoUrl} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                ) : (
-                  <div className="text-center text-gray-400">
-                    <svg className="w-16 h-16 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    <div className="text-sm">Video clip not available</div>
-                    <div className="text-xs opacity-75">(VMS integration required)</div>
-                  </div>
-                )}
+                <div className="text-center text-gray-400">
+                  <svg className="w-16 h-16 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <div className="text-sm">Video clip not available</div>
+                  <div className="text-xs opacity-75">(VMS integration required)</div>
+                </div>
               </div>
               <div className="p-4 bg-gray-50 grid grid-cols-2 gap-4">
                 <div className="space-y-2">

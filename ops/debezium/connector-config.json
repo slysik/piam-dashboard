@@ -1,0 +1,27 @@
+{
+  "name": "cloudgate-mysql-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+    "tasks.max": "1",
+    "database.hostname": "mysql",
+    "database.port": "3306",
+    "database.user": "debezium",
+    "database.password": "dbz",
+    "database.server.id": "184054",
+    "database.server.name": "cg",
+    "database.include.list": "cloudgate",
+    "table.include.list": "cloudgate.cg_access_event,cloudgate.cg_connector_health",
+    "include.schema.changes": "false",
+    "topic.prefix": "cg",
+    "schema.history.internal.kafka.bootstrap.servers": "redpanda:29092",
+    "schema.history.internal.kafka.topic": "schema-changes.cloudgate",
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.add.fields": "op,ts_ms",
+    "transforms.unwrap.drop.tombstones": "true",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "false",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false"
+  }
+}

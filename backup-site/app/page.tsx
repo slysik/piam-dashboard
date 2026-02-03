@@ -118,7 +118,6 @@ export default function Dashboard() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [dataAge, setDataAge] = useState(12);
   const [timeRange, setTimeRange] = useState<'15m' | '60m' | '24h'>('24h');
-  const [isStreaming, setIsStreaming] = useState(false);
   const [useLiveData, setUseLiveData] = useState(false);
 
   useEffect(() => {
@@ -210,10 +209,8 @@ export default function Dashboard() {
         )}
 
         {activeTab === 'risk' && (
-          <RealTimeRiskPanel 
-            tenant={tenant} 
-            isStreaming={isStreaming} 
-            onToggleStream={() => setIsStreaming(!isStreaming)}
+          <RealTimeRiskPanel
+            tenant={tenant}
             useLiveData={useLiveData}
           />
         )}

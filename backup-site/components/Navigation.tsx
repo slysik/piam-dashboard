@@ -54,24 +54,48 @@ interface NavigationProps {
 }
 
 export default function Navigation({ activeTab, onTabChange, visibleTabs }: NavigationProps) {
+  // Separate Dashboard Builder (genai) from other tabs to render on far right
+  const regularTabs = visibleTabs.filter(tab => tab.id !== 'genai');
+  const dashboardBuilderTab = visibleTabs.find(tab => tab.id === 'genai');
+
   return (
     <nav className="bg-white border-b border-gray-200">
       <div className="w-full px-6">
-        <div className="flex space-x-1">
-          {visibleTabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
-                activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600 bg-blue-50'
-                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <span className="mr-2">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
+        <div className="flex justify-between">
+          {/* Left: Persona-specific tabs */}
+          <div className="flex space-x-1">
+            {regularTabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => onTabChange(tab.id)}
+                className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+                  activeTab === tab.id
+                    ? 'border-blue-600 text-blue-600 bg-blue-50'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+              >
+                <span className="mr-2">{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Right: Dashboard Builder (always visible, all personas) */}
+          {dashboardBuilderTab && (
+            <div className="flex">
+              <button
+                onClick={() => onTabChange(dashboardBuilderTab.id)}
+                className={`px-4 py-3 text-sm font-medium transition-colors border-b-2 ${
+                  activeTab === dashboardBuilderTab.id
+                    ? 'border-purple-600 text-purple-600 bg-purple-50'
+                    : 'border-transparent text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                }`}
+              >
+                <span className="mr-2">{dashboardBuilderTab.icon}</span>
+                {dashboardBuilderTab.label}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </nav>

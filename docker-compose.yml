@@ -17,6 +17,8 @@ services:
       CLICKHOUSE_PASSWORD: ""
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
       TZ: America/New_York
+    mem_limit: 1g
+    memswap_limit: 1g
     ulimits:
       nofile:
         soft: 262144
@@ -27,43 +29,111 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    networks:
+      - piam-network
 
-  superset:
-    image: apache/superset:3.1.0
-    container_name: piam-superset
+  mysql:
+    image: mysql:8.0
+    container_name: piam-mysql
     ports:
-      - "8088:8088"
-    volumes:
-      - ./superset/superset_config.py:/app/pythonpath/superset_config.py:ro
-      - superset-data:/app/superset_home
+      - "3306:3306"
+    mem_limit: 256m
     environment:
-      SUPERSET_SECRET_KEY: "${SUPERSET_SECRET_KEY:-piam-demo-secret-key}"
-      SUPERSET_LOAD_EXAMPLES: "no"
-      TALISMAN_ENABLED: "False"
-      MAPBOX_API_KEY: "${MAPBOX_API_KEY:-}"
-      TZ: America/New_York
-    depends_on:
-      clickhouse:
-        condition: service_healthy
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: cloudgate
+    command: --innodb-buffer-pool-size=64M --innodb-log-buffer-size=8M --max-connections=50
+    volumes:
+      - ./ops/mysql-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8088/health')\" || exit 1"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "mysqladmin", "ping", "-u", "root", "-prootpass"]
+      interval: 10s
+      timeout: 5s
       retries: 5
-      start_period: 90s
-    command: >
-      bash -c "
-        pip install clickhouse-connect &&
-        superset db upgrade &&
-        superset fab create-admin --username admin --firstname Admin --lastname User --email admin@example.com --password admin 2>/dev/null || true &&
-        superset init &&
-        superset run -h 0.0.0.0 -p 8088 --with-threads --reload
-      "
+      start_period: 30s
+    networks:
+      - piam-network
+
+  redpanda:
+    image: redpandadata/redpanda:v24.1.1
+    container_name: piam-redpanda
+    ports:
+      - "9092:9092"
+    mem_limit: 256m
+    command:
+      - redpanda
+      - start
+      - --memory
+      - 200M
+      - --reserve-memory
+      - 0M
+      - --smp
+      - "1"
+      - --overprovisioned
+      - --node-id
+      - "0"
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:29092,OUTSIDE://localhost:9092
+      - --mode
+      - dev-container
+    networks:
+      - piam-network
+
+  debezium-connect:
+    image: debezium/connect:2.5
+    container_name: piam-debezium-connect
+    ports:
+      - "8083:8083"
+    mem_limit: 400m
+    environment:
+      BOOTSTRAP_SERVERS: redpanda:29092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_statuses
+      KAFKA_HEAP_OPTS: -Xms128m -Xmx256m
+    depends_on:
+      - mysql
+      - redpanda
+    networks:
+      - piam-network
+
+  generator:
+    build:
+      context: ./cdc-pipeline
+    container_name: piam-generator
+    command: python generator.py
+    mem_limit: 64m
+    environment:
+      INGEST_MODE: cdc
+      MYSQL_HOST: mysql
+      CLICKHOUSE_HOST: clickhouse
+    depends_on:
+      - mysql
+      - clickhouse
+    networks:
+      - piam-network
+
+  consumer:
+    build:
+      context: ./cdc-pipeline
+    container_name: piam-consumer
+    command: python consumer.py
+    mem_limit: 64m
+    environment:
+      KAFKA_BOOTSTRAP: redpanda:29092
+      CLICKHOUSE_HOST: clickhouse
+    depends_on:
+      - redpanda
+      - clickhouse
+      - debezium-connect
+    networks:
+      - piam-network
 
 volumes:
   clickhouse-data:
-  superset-data:
 
 networks:
-  default:
+  piam-network:
     name: piam-network

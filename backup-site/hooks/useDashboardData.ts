@@ -106,7 +106,7 @@ export function useKPIDataWithFallback(
     `,
     demoData,
     useLiveData,
-    refreshInterval: 15000,
+    refreshInterval: 2000,
     transformLiveData: (rows) => {
       if (rows.length === 0) return demoData;
       const row = rows[0] as Record<string, number>;
@@ -177,7 +177,7 @@ export function useTimeSeriesWithFallback(
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 15000);
+    const interval = setInterval(fetchData, 2000);
     return () => clearInterval(interval);
   }, [tenant, useLiveData, timeRange, demoData, tenantId, minutes]);
 
@@ -221,7 +221,7 @@ export function useRecentEventsWithFallback(
     `,
     demoData,
     useLiveData,
-    refreshInterval: 5000,
+    refreshInterval: 2000,
     transformLiveData: (rows) => {
       if (rows.length === 0) return demoData;
       return rows.map((row: unknown) => {
@@ -268,7 +268,7 @@ export function useConnectorHealthWithFallback(
     `,
     demoData,
     useLiveData,
-    refreshInterval: 10000,
+    refreshInterval: 2000,
     transformLiveData: (rows) => {
       if (rows.length === 0) return demoData;
       return rows.map((row: unknown) => {
@@ -316,7 +316,7 @@ export function useDoorHotspotsWithFallback(
     `,
     demoData,
     useLiveData,
-    refreshInterval: 30000,
+    refreshInterval: 2000,
     transformLiveData: (rows) => {
       if (rows.length === 0) return demoData;
       return rows.map((row: unknown) => {
@@ -373,7 +373,7 @@ export function useComplianceWithFallback(
     `,
     demoData,
     useLiveData,
-    refreshInterval: 30000,
+    refreshInterval: 2000,
     transformLiveData: (rows) => {
       if (rows.length === 0) return demoData;
       return rows.map((row: unknown) => {

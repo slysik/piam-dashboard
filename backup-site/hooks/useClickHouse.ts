@@ -90,7 +90,7 @@ export function useKPIData(tenant: string) {
       LIMIT 1
     `,
     params: { tenant },
-    refreshInterval: 15000,
+    refreshInterval: 2000,
     fallbackData: {
       events_15m: 0,
       denies_15m: 0,
@@ -116,7 +116,7 @@ export function useTimeSeriesData(tenant: string, minutes: number = 60) {
       ORDER BY minute ASC
     `,
     params: { tenant, minutes },
-    refreshInterval: 15000,
+    refreshInterval: 2000,
     fallbackData: [],
   });
 }
@@ -140,7 +140,7 @@ export function useDoorHotspots(tenant: string) {
       LIMIT 100
     `,
     params: { tenant },
-    refreshInterval: 30000,
+    refreshInterval: 2000,
     fallbackData: [],
   });
 }
@@ -164,7 +164,7 @@ export function useRecentEvents(tenant: string, limit: number = 50) {
       LIMIT {limit:UInt32}
     `,
     params: { tenant, limit },
-    refreshInterval: 5000,
+    refreshInterval: 2000,
     fallbackData: [],
   });
 }
@@ -184,7 +184,7 @@ export function useConnectorHealth(tenant: string) {
       WHERE tenant_id = {tenant:String}
     `,
     params: { tenant },
-    refreshInterval: 10000,
+    refreshInterval: 2000,
     fallbackData: [],
   });
 }
@@ -205,7 +205,7 @@ export function useInsights(tenant: string) {
       LIMIT 10
     `,
     params: { tenant },
-    refreshInterval: 30000,
+    refreshInterval: 2000,
     fallbackData: [],
   });
 }
@@ -220,7 +220,7 @@ export function useFreshness() {
       FROM piam.v_freshness
       LIMIT 1
     `,
-    refreshInterval: 5000,
+    refreshInterval: 2000,
     fallbackData: {
       age_seconds: 0,
       events_last_5m: 0,

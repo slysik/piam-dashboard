@@ -28,7 +28,7 @@
 
 # Declare all targets as phony (not associated with files)
 # This ensures make always runs these recipes regardless of file timestamps
-.PHONY: up down reset clean-volumes logs health ports open-superset shell-ch shell-superset generate trickle replay clean ddl-apply verify quickstart dashboards-export dashboards-import backup-dev backup-build backup-deploy help
+.PHONY: up down reset clean-volumes logs health ports open-superset shell-ch shell-superset generate trickle replay clean ddl-apply verify quickstart dashboards-export dashboards-import backup-dev backup-build backup-deploy help demo-up demo-down demo-reset demo-verify demo-logs
 
 # Load environment variables from .env file if it exists
 # The '-' prefix suppresses errors if the file doesn't exist
@@ -297,3 +297,54 @@ backup-deploy: ## Deploy backup site to Vercel
 	# Deploys to Vercel's edge network for global availability
 	# Requires Vercel CLI to be installed and authenticated
 	cd backup-site && vercel --prod
+
+# =============================================================================
+# CDC DEMO MODE
+# =============================================================================
+# Commands for running the Change Data Capture (CDC) demo stack
+# This mode demonstrates real-time data streaming from MySQL through
+# Debezium/Redpanda into ClickHouse for analytics
+
+demo-up: ## Start CDC demo stack (MySQL + Redpanda + Debezium + ClickHouse)
+	@echo "Starting CDC Demo Stack..."
+	# Start core infrastructure services first
+	docker compose up -d mysql redpanda clickhouse
+	@echo "Waiting for MySQL and Redpanda to be ready..."
+	# Allow time for MySQL and Redpanda to fully initialize
+	@sleep 15
+	# Start Debezium Connect after infrastructure is ready
+	docker compose up -d debezium-connect
+	@echo "Waiting for Debezium Connect to initialize..."
+	@sleep 10
+	# Register the MySQL connector with Debezium
+	@./ops/debezium/register-connector.sh
+	@echo "Starting generator and consumer..."
+	# Start the event generator and ClickHouse consumer
+	docker compose up -d generator consumer
+	@sleep 5
+	# Verify the pipeline is flowing
+	$(MAKE) demo-verify --no-print-directory
+
+demo-down: ## Stop CDC demo stack
+	# Stops and removes all CDC demo containers
+	docker compose down
+
+demo-reset: ## Reset CDC demo (truncate recent data, restart)
+	@echo "Resetting CDC demo..."
+	# Delete recent events from ClickHouse (last 24 hours)
+	docker exec piam-clickhouse clickhouse-client --database=piam --query="ALTER TABLE fact_access_events DELETE WHERE event_time > now() - INTERVAL 1 DAY"
+	# Delete recent connector health records
+	docker exec piam-clickhouse clickhouse-client --database=piam --query="ALTER TABLE fact_connector_health DELETE WHERE check_time > now() - INTERVAL 1 DAY"
+	# Restart the generator and consumer to begin fresh
+	docker compose restart generator consumer
+	@echo "Demo reset complete"
+
+demo-verify: ## Verify CDC pipeline is flowing
+	@echo "=== CDC Pipeline Verification ==="
+	# Run the verification script to check all CDC components
+	@python3 scripts/demo-verify.py
+
+demo-logs: ## Tail CDC component logs
+	# Follow logs from CDC-specific services
+	# Press Ctrl+C to stop following
+	docker compose logs -f generator consumer debezium-connect
