@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { queryClickHouse } from '@/lib/clickhouse';
 
 interface UseDashboardDataOptions<T> {
@@ -27,20 +27,28 @@ export function useDashboardData<T>({
   refreshInterval = 15000,
   transformLiveData,
 }: UseDashboardDataOptions<T>): UseDashboardDataResult<T> {
+  // Use ref to store demoData to avoid dependency changes triggering re-fetches
+  const demoDataRef = useRef(demoData);
   const [data, setData] = useState<T>(demoData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasLiveData, setHasLiveData] = useState(false);
 
+  // Update ref when demoData changes (for fallback)
+  useEffect(() => {
+    demoDataRef.current = demoData;
+  }, [demoData]);
+
+  // Only reset to demoData when switching FROM live TO demo mode
   useEffect(() => {
     if (!useLiveData) {
-      setData(demoData);
+      setData(demoDataRef.current);
+      setHasLiveData(false);
     }
-  }, [demoData, useLiveData]);
+  }, [useLiveData]);
 
   const fetchLiveData = useCallback(async () => {
     if (!useLiveData) {
-      setData(demoData);
-      setError(null);
       return;
     }
 
@@ -52,15 +60,19 @@ export function useDashboardData<T>({
       } else {
         setData(result as T);
       }
+      setHasLiveData(true);
       setError(null);
     } catch (err) {
       console.error('ClickHouse query failed:', err);
       setError('Failed to fetch live data');
-      setData(demoData);
+      // Don't reset to demoData on error - keep previous data to prevent flickering
+      if (!hasLiveData) {
+        setData(demoDataRef.current);
+      }
     } finally {
       setLoading(false);
     }
-  }, [useLiveData, liveQuery, liveParams, demoData, transformLiveData]);
+  }, [useLiveData, liveQuery, liveParams, transformLiveData, hasLiveData]);
 
   useEffect(() => {
     fetchLiveData();
@@ -111,12 +123,12 @@ export function useKPIDataWithFallback(
       if (rows.length === 0) return demoData;
       const row = rows[0] as Record<string, number>;
       return {
-        eventsToday: row.eventsToday || demoData.eventsToday,
-        denyRate: row.denyRate || demoData.denyRate,
+        eventsToday: row.eventsToday ?? demoData.eventsToday,
+        denyRate: row.denyRate ?? demoData.denyRate,
         activeDoors: demoData.activeDoors,
         connectorsOnline: demoData.connectorsOnline,
         connectorsTotal: demoData.connectorsTotal,
-        suspicious: row.suspicious || demoData.suspicious,
+        suspicious: row.suspicious ?? demoData.suspicious,
       };
     },
   });

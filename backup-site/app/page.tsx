@@ -20,6 +20,7 @@ import RealTimeRiskPanel from '@/components/RealTimeRiskPanel';
 import HireToRetireView from '@/components/HireToRetireView';
 import SelfServiceAnalytics from '@/components/SelfServiceAnalytics';
 import SettingsPanel from '@/components/SettingsPanel';
+import { useKPIDataWithFallback } from '@/hooks/useDashboardData';
 
 const allTabs = [
   { id: 'executive', label: 'Executive Overview', icon: '📊' },
@@ -118,7 +119,7 @@ export default function Dashboard() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [dataAge, setDataAge] = useState(12);
   const [timeRange, setTimeRange] = useState<'15m' | '60m' | '24h'>('24h');
-  const [useLiveData, setUseLiveData] = useState(false);
+  const [useLiveData, setUseLiveData] = useState(true);  // Default to live ClickHouse data
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -136,7 +137,7 @@ export default function Dashboard() {
     setActiveTab(personaDefaults[persona]);
   }, [persona]);
 
-  const kpis = sampleKPIs[tenant];
+  const { data: kpis } = useKPIDataWithFallback(tenant, useLiveData, sampleKPIs[tenant]);
   const alerts = sampleAlerts[tenant];
   const events = sampleEvents[tenant];
 

@@ -78,17 +78,17 @@ export default function RealTimeRiskPanel({ tenant, useLiveData }: RealTimeRiskP
         SELECT
           event_id as id,
           formatDateTime(event_time, '%H:%i:%S') as timestamp,
-          coalesce(person_name, badge_id) as person,
+          coalesce(nullIf(person_id, ''), badge_id) as person,
           badge_id as badge,
-          location_name as door,
-          coalesce(site_name, site_id) as site,
+          location_id as door,
+          site_id as site,
           upper(result) as result,
           suspicious_flag,
           suspicious_reason,
-          coalesce(suspicious_score, 0) as riskScore,
-          raw_payload
-        FROM piam.v_recent_events
+          coalesce(suspicious_score, 0) as riskScore
+        FROM piam.fact_access_events
         WHERE tenant_id = '${tenantId}'
+          AND event_time > now() - INTERVAL 5 MINUTE
         ORDER BY event_time DESC
         LIMIT 50
       `);

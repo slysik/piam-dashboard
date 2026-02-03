@@ -93,6 +93,40 @@ DENY_REASONS = [
 ]
 SUSPICIOUS_REASONS = ['TAILGATING', 'UNUSUAL_HOURS', 'MULTIPLE_FAILURES', 'CREDENTIAL_SHARING']
 
+# Realistic name data for generating person identities
+FIRST_NAMES = [
+    'James', 'Mary', 'Michael', 'Patricia', 'Robert', 'Jennifer', 'David', 'Linda',
+    'William', 'Elizabeth', 'Richard', 'Barbara', 'Joseph', 'Susan', 'Thomas', 'Jessica',
+    'Christopher', 'Sarah', 'Charles', 'Karen', 'Daniel', 'Nancy', 'Matthew', 'Lisa',
+    'Anthony', 'Betty', 'Mark', 'Margaret', 'Donald', 'Sandra', 'Steven', 'Ashley',
+    'Paul', 'Kimberly', 'Andrew', 'Emily', 'Joshua', 'Donna', 'Kenneth', 'Michelle',
+    'Kevin', 'Dorothy', 'Brian', 'Carol', 'George', 'Amanda', 'Timothy', 'Melissa',
+    'Ronald', 'Deborah', 'Edward', 'Stephanie', 'Jason', 'Rebecca', 'Jeffrey', 'Sharon',
+    'Ryan', 'Laura', 'Jacob', 'Cynthia', 'Gary', 'Kathleen', 'Nicholas', 'Amy',
+    'Eric', 'Angela', 'Jonathan', 'Shirley', 'Stephen', 'Anna', 'Larry', 'Brenda',
+    'Justin', 'Pamela', 'Scott', 'Emma', 'Brandon', 'Nicole', 'Benjamin', 'Helen',
+    'Samuel', 'Samantha', 'Raymond', 'Katherine', 'Gregory', 'Christine', 'Frank', 'Debra',
+    'Alexander', 'Rachel', 'Patrick', 'Carolyn', 'Jack', 'Janet', 'Dennis', 'Catherine',
+    'Carlos', 'Maria', 'Miguel', 'Sofia', 'Wei', 'Li', 'Ahmed', 'Fatima',
+    'Raj', 'Priya', 'Hiroshi', 'Yuki', 'Dmitri', 'Olga', 'Kwame', 'Amara',
+]
+
+LAST_NAMES = [
+    'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis',
+    'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas',
+    'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson', 'White',
+    'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson', 'Walker', 'Young',
+    'Allen', 'King', 'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill', 'Flores',
+    'Green', 'Adams', 'Nelson', 'Baker', 'Hall', 'Rivera', 'Campbell', 'Mitchell',
+    'Carter', 'Roberts', 'Gomez', 'Phillips', 'Evans', 'Turner', 'Diaz', 'Parker',
+    'Cruz', 'Edwards', 'Collins', 'Reyes', 'Stewart', 'Morris', 'Morales', 'Murphy',
+    'Cook', 'Rogers', 'Gutierrez', 'Ortiz', 'Morgan', 'Cooper', 'Peterson', 'Bailey',
+    'Reed', 'Kelly', 'Howard', 'Ramos', 'Kim', 'Cox', 'Ward', 'Richardson',
+    'Watson', 'Brooks', 'Chavez', 'Wood', 'James', 'Bennett', 'Gray', 'Mendoza',
+    'Chen', 'Patel', 'Singh', 'Kumar', 'Tanaka', 'Yamamoto', 'Ivanov', 'Petrov',
+    'Okonkwo', 'Mensah', 'Ali', 'Hassan', 'Cohen', 'Rossi', 'Mueller', 'Johansson',
+]
+
 
 # =============================================================================
 # Event Generation Functions
@@ -104,11 +138,12 @@ def generate_access_event(connector: dict) -> dict:
     tenant_id = random.choice(config.tenants)
     event_time = datetime.utcnow()
 
-    # Generate identifiers
-    person_num = random.randint(1, 200)
-    badge_num = random.randint(1, 500)
-    person_id = f'PERSON-{tenant_id}-{person_num}'
-    badge_id = f'BADGE-{tenant_id}-{badge_num}'
+    # Generate identifiers with realistic names
+    first_name = random.choice(FIRST_NAMES)
+    last_name = random.choice(LAST_NAMES)
+    person_id = f'{first_name} {last_name}'
+    badge_num = random.randint(1000, 9999)
+    badge_id = f'B-{badge_num}'
 
     # Location info
     site_id = random.choice(SITES)

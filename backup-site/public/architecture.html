@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClearView Intelligence - Data Flow Architecture</title>
+    <title>ClearView Intelligence - Solution Architecture</title>
     <style>
         * {
             margin: 0;
@@ -83,20 +83,189 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Architecture Diagram */
-        .architecture {
+        /* Pipeline styles */
+        .pipeline {
             display: flex;
-            flex-direction: column;
-            gap: 30px;
             align-items: center;
+            justify-content: center;
+            gap: 0;
+            padding: 40px 20px;
+            overflow-x: auto;
         }
 
+        .pipeline-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 140px;
+            max-width: 180px;
+        }
+
+        .pipeline-box {
+            width: 100%;
+            padding: 20px 15px;
+            border-radius: 16px;
+            text-align: center;
+            position: relative;
+        }
+
+        .pipeline-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .pipeline-name {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 5px;
+        }
+
+        .pipeline-desc {
+            font-size: 0.75rem;
+            color: #a0aec0;
+            line-height: 1.3;
+        }
+
+        .pipeline-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+        }
+
+        .pipeline-arrow svg {
+            width: 40px;
+            height: 24px;
+        }
+
+        .pipeline-arrow path {
+            fill: none;
+            stroke: url(#arrowGradient);
+            stroke-width: 3;
+            stroke-linecap: round;
+        }
+
+        .pipeline-arrow polygon {
+            fill: #764ba2;
+        }
+
+        /* Stage colors */
+        .stage-pacs { background: linear-gradient(135deg, rgba(99, 179, 237, 0.3), rgba(66, 153, 225, 0.2)); border: 1px solid rgba(99, 179, 237, 0.4); }
+        .stage-mysql { background: linear-gradient(135deg, rgba(246, 173, 85, 0.3), rgba(237, 137, 54, 0.2)); border: 1px solid rgba(246, 173, 85, 0.4); }
+        .stage-cdc { background: linear-gradient(135deg, rgba(72, 187, 120, 0.3), rgba(56, 178, 172, 0.2)); border: 1px solid rgba(72, 187, 120, 0.4); }
+        .stage-clickhouse { background: linear-gradient(135deg, rgba(237, 100, 166, 0.3), rgba(245, 101, 101, 0.2)); border: 1px solid rgba(237, 100, 166, 0.4); }
+        .stage-dashboard { background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.2)); border: 1px solid rgba(102, 126, 234, 0.4); }
+
+        /* Value prop cards */
+        .value-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .value-card {
+            background: rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .value-card-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .value-card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .value-card-desc {
+            font-size: 0.9rem;
+            color: #a0aec0;
+            line-height: 1.5;
+        }
+
+        /* Persona cards */
+        .persona-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .persona-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+        }
+
+        .persona-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .persona-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .persona-icon {
+            font-size: 2.5rem;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+
+        .persona-ceo .persona-icon { background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3)); }
+        .persona-soc .persona-icon { background: linear-gradient(135deg, rgba(245, 101, 101, 0.3), rgba(237, 100, 166, 0.3)); }
+        .persona-facilities .persona-icon { background: linear-gradient(135deg, rgba(72, 187, 120, 0.3), rgba(56, 178, 172, 0.3)); }
+        .persona-ithr .persona-icon { background: linear-gradient(135deg, rgba(246, 173, 85, 0.3), rgba(237, 137, 54, 0.3)); }
+        .persona-compliance .persona-icon { background: linear-gradient(135deg, rgba(99, 179, 237, 0.3), rgba(66, 153, 225, 0.3)); }
+
+        .persona-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .persona-role {
+            font-size: 0.85rem;
+            color: #a0aec0;
+        }
+
+        .persona-views {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .view-tag {
+            padding: 6px 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .view-tag.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        /* Layer for database */
         .layer {
             width: 100%;
             max-width: 1000px;
+            margin: 0 auto;
             padding: 30px;
             border-radius: 16px;
-            position: relative;
         }
 
         .layer-title {
@@ -107,146 +276,9 @@
             margin-bottom: 20px;
         }
 
-        /* Frontend Layer */
-        .frontend-layer {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
-            border: 1px solid rgba(102, 126, 234, 0.3);
-        }
-
-        .components-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-
-        .component {
-            background: rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-
-        .component:hover {
-            background: rgba(255,255,255,0.2);
-            transform: translateY(-5px);
-        }
-
-        .component-icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
-        }
-
-        .component-name {
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .component-desc {
-            font-size: 0.8rem;
-            color: #a0aec0;
-        }
-
-        /* Arrow */
-        .arrow {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: #667eea;
-        }
-
-        .arrow-line {
-            width: 4px;
-            height: 40px;
-            background: linear-gradient(180deg, #667eea, #764ba2);
-            border-radius: 2px;
-        }
-
-        .arrow-head {
-            width: 0;
-            height: 0;
-            border-left: 12px solid transparent;
-            border-right: 12px solid transparent;
-            border-top: 15px solid #764ba2;
-        }
-
-        .arrow-label {
-            font-size: 0.75rem;
-            color: #a0aec0;
-            margin-top: 5px;
-        }
-
-        .arrow-up .arrow-head {
-            border-top: none;
-            border-bottom: 15px solid #667eea;
-        }
-
-        /* API Layer */
-        .api-layer {
-            background: linear-gradient(135deg, rgba(246, 173, 85, 0.2), rgba(240, 147, 251, 0.2));
-            border: 1px solid rgba(246, 173, 85, 0.3);
-        }
-
-        /* Hooks Layer */
-        .hooks-layer {
-            background: linear-gradient(135deg, rgba(72, 187, 120, 0.2), rgba(56, 178, 172, 0.2));
-            border: 1px solid rgba(72, 187, 120, 0.3);
-        }
-
-        /* Database Layer */
         .database-layer {
             background: linear-gradient(135deg, rgba(237, 100, 166, 0.2), rgba(245, 101, 101, 0.2));
             border: 1px solid rgba(237, 100, 166, 0.3);
-        }
-
-        /* PACS Layer */
-        .pacs-layer {
-            background: linear-gradient(135deg, rgba(99, 179, 237, 0.2), rgba(66, 153, 225, 0.2));
-            border: 1px solid rgba(99, 179, 237, 0.3);
-        }
-
-        /* Code Block */
-        .code-block {
-            background: #0d1117;
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            overflow-x: auto;
-            font-family: 'Fira Code', 'Monaco', monospace;
-            font-size: 0.85rem;
-            line-height: 1.6;
-        }
-
-        .code-block .keyword { color: #ff7b72; }
-        .code-block .string { color: #a5d6ff; }
-        .code-block .function { color: #d2a8ff; }
-        .code-block .comment { color: #8b949e; }
-        .code-block .variable { color: #ffa657; }
-
-        /* Flow Diagram */
-        .flow-diagram {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .flow-box {
-            flex: 1;
-            min-width: 150px;
-            max-width: 200px;
-            padding: 20px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            text-align: center;
-        }
-
-        .flow-arrow {
-            font-size: 2rem;
-            color: #667eea;
         }
 
         /* Table Styles */
@@ -284,48 +316,41 @@
         .badge-orange { background: rgba(246, 173, 85, 0.3); color: #f6ad55; }
         .badge-purple { background: rgba(159, 122, 234, 0.3); color: #b794f4; }
 
-        /* Sequence Diagram */
-        .sequence {
-            display: flex;
-            flex-direction: column;
+        /* Components grid */
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
+        }
+
+        .component {
+            background: rgba(255,255,255,0.1);
             padding: 20px;
-        }
-
-        .sequence-step {
-            display: flex;
-            align-items: flex-start;
-            gap: 20px;
-        }
-
-        .step-number {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
-        .step-content {
-            flex: 1;
-            background: rgba(255,255,255,0.05);
-            padding: 15px 20px;
             border-radius: 12px;
-            border-left: 3px solid #667eea;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
         }
 
-        .step-title {
-            font-weight: 600;
-            margin-bottom: 5px;
+        .component:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-5px);
         }
 
-        .step-desc {
-            font-size: 0.9rem;
-            color: #a0aec0;
+        .component-icon { font-size: 2rem; margin-bottom: 10px; }
+        .component-name { font-weight: 600; margin-bottom: 5px; }
+        .component-desc { font-size: 0.8rem; color: #a0aec0; }
+
+        /* Latency highlight */
+        .latency-box {
+            text-align: center;
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 16px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         /* Footer */
@@ -339,187 +364,349 @@
         /* Responsive */
         @media (max-width: 768px) {
             h1 { font-size: 1.8rem; }
-            .layer { padding: 20px; }
-            .flow-diagram { flex-direction: column; }
-            .flow-arrow { transform: rotate(90deg); }
+            .pipeline { flex-direction: column; }
+            .pipeline-arrow { transform: rotate(90deg); }
         }
     </style>
 </head>
 <body>
+    <!-- SVG Defs for arrow gradients -->
+    <svg width="0" height="0">
+        <defs>
+            <linearGradient id="arrowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#667eea"/>
+                <stop offset="100%" style="stop-color:#764ba2"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
     <div class="container">
         <header>
             <h1>ClearView Intelligence</h1>
-            <p class="subtitle">Data Flow Architecture - From ClickHouse to React Frontend</p>
+            <p class="subtitle">Unified Physical Identity & Access Management</p>
         </header>
 
         <nav class="nav-tabs">
             <div class="nav-tab active" onclick="showSlide(0)">Overview</div>
-            <div class="nav-tab" onclick="showSlide(1)">Data Layer</div>
-            <div class="nav-tab" onclick="showSlide(2)">API Layer</div>
-            <div class="nav-tab" onclick="showSlide(3)">Hooks Layer</div>
-            <div class="nav-tab" onclick="showSlide(4)">Components</div>
-            <div class="nav-tab" onclick="showSlide(5)">Data Flow</div>
+            <div class="nav-tab" onclick="showSlide(1)">Data Pipeline</div>
+            <div class="nav-tab" onclick="showSlide(2)">Dashboards by Role</div>
+            <div class="nav-tab" onclick="showSlide(3)">Data Model</div>
         </nav>
 
         <!-- Slide 0: Overview -->
         <div class="slide active" id="slide-0">
-            <div class="architecture">
-                <!-- Frontend Layer -->
-                <div class="layer frontend-layer">
-                    <div class="layer-title">Frontend Layer - React Components</div>
-                    <div class="components-grid">
-                        <div class="component">
-                            <div class="component-icon">📊</div>
-                            <div class="component-name">Executive Overview</div>
-                            <div class="component-desc">KPIs, Risk Trends, Compliance</div>
-                        </div>
-                        <div class="component">
-                            <div class="component-icon">🔴</div>
-                            <div class="component-name">Real-Time Risk</div>
-                            <div class="component-desc">Live Events, Anomalies, Video</div>
-                        </div>
-                        <div class="component">
-                            <div class="component-icon">✅</div>
-                            <div class="component-name">Compliance & Audit</div>
-                            <div class="component-desc">Certifications, Expiry Tracking</div>
-                        </div>
-                        <div class="component">
-                            <div class="component-icon">🤖</div>
-                            <div class="component-name">Dashboard Builder</div>
-                            <div class="component-desc">AI-Generated Visualizations</div>
-                        </div>
+            <!-- Simple value proposition -->
+            <div style="text-align: center; max-width: 800px; margin: 0 auto 50px;">
+                <h2 style="font-size: 1.8rem; margin-bottom: 20px;">One Platform for All Your Physical Access Data</h2>
+                <p style="color: #a0aec0; font-size: 1.1rem; line-height: 1.7;">
+                    ClearView connects to your existing badge systems, streams every access event in real-time,
+                    and delivers role-specific dashboards so every stakeholder sees exactly what they need.
+                </p>
+            </div>
+
+            <!-- Visual Pipeline (simplified) -->
+            <div class="pipeline">
+                <div class="pipeline-stage">
+                    <div class="pipeline-box stage-pacs">
+                        <div class="pipeline-icon">🏢</div>
+                        <div class="pipeline-name">Badge Systems</div>
+                        <div class="pipeline-desc">Lenel, C-CURE, S2, Genetec</div>
                     </div>
                 </div>
 
-                <div class="arrow">
-                    <div class="arrow-line"></div>
-                    <div class="arrow-head"></div>
-                    <div class="arrow-label">Props & State</div>
+                <div class="pipeline-arrow">
+                    <svg viewBox="0 0 40 24">
+                        <path d="M0 12 L30 12"/>
+                        <polygon points="28,6 40,12 28,18"/>
+                    </svg>
                 </div>
 
-                <!-- Hooks Layer -->
-                <div class="layer hooks-layer">
-                    <div class="layer-title">Custom Hooks - Data Fetching & State Management</div>
-                    <div class="components-grid">
-                        <div class="component">
-                            <div class="component-icon">🔄</div>
-                            <div class="component-name">useClickHouse</div>
-                            <div class="component-desc">Auto-refresh queries with fallback</div>
-                        </div>
-                        <div class="component">
-                            <div class="component-icon">📈</div>
-                            <div class="component-name">useDashboardData</div>
-                            <div class="component-desc">Aggregated dashboard state</div>
-                        </div>
-                        <div class="component">
-                            <div class="component-icon">🌐</div>
-                            <div class="component-name">DataContext</div>
-                            <div class="component-desc">Tenant & Persona selection</div>
-                        </div>
+                <div class="pipeline-stage">
+                    <div class="pipeline-box stage-cdc">
+                        <div class="pipeline-icon">🔄</div>
+                        <div class="pipeline-name">Real-Time Sync</div>
+                        <div class="pipeline-desc">Change Data Capture</div>
                     </div>
                 </div>
 
-                <div class="arrow">
-                    <div class="arrow-line"></div>
-                    <div class="arrow-head"></div>
-                    <div class="arrow-label">HTTP POST (JSON)</div>
+                <div class="pipeline-arrow">
+                    <svg viewBox="0 0 40 24">
+                        <path d="M0 12 L30 12"/>
+                        <polygon points="28,6 40,12 28,18"/>
+                    </svg>
                 </div>
 
-                <!-- API Layer -->
-                <div class="layer api-layer">
-                    <div class="layer-title">API Routes - Next.js Server</div>
-                    <div class="components-grid">
-                        <div class="component">
-                            <div class="component-icon">🔌</div>
-                            <div class="component-name">/api/clickhouse</div>
-                            <div class="component-desc">Query proxy with auth</div>
-                        </div>
-                        <div class="component">
-                            <div class="component-icon">💧</div>
-                            <div class="component-name">/api/trickle</div>
-                            <div class="component-desc">Live event generation</div>
-                        </div>
-                        <div class="component">
-                            <div class="component-icon">🎨</div>
-                            <div class="component-name">/api/generate-dashboard</div>
-                            <div class="component-desc">AI visualization builder</div>
-                        </div>
+                <div class="pipeline-stage">
+                    <div class="pipeline-box stage-clickhouse">
+                        <div class="pipeline-icon">⚡</div>
+                        <div class="pipeline-name">Analytics Engine</div>
+                        <div class="pipeline-desc">Sub-second queries</div>
                     </div>
                 </div>
 
-                <div class="arrow">
-                    <div class="arrow-line"></div>
-                    <div class="arrow-head"></div>
-                    <div class="arrow-label">HTTP/SQL over port 8123</div>
+                <div class="pipeline-arrow">
+                    <svg viewBox="0 0 40 24">
+                        <path d="M0 12 L30 12"/>
+                        <polygon points="28,6 40,12 28,18"/>
+                    </svg>
                 </div>
 
-                <!-- Database Layer -->
-                <div class="layer database-layer">
-                    <div class="layer-title">Database Layer - ClickHouse OLAP</div>
-                    <div class="components-grid">
-                        <div class="component">
-                            <div class="component-icon">📋</div>
-                            <div class="component-name">access_events</div>
-                            <div class="component-desc">Core fact table (partitioned)</div>
-                        </div>
-                        <div class="component">
-                            <div class="component-icon">👁️</div>
-                            <div class="component-name">Views (v_*)</div>
-                            <div class="component-desc">Pre-aggregated queries</div>
-                        </div>
-                        <div class="component">
-                            <div class="component-icon">👤</div>
-                            <div class="component-name">persons</div>
-                            <div class="component-desc">Identity dimension</div>
-                        </div>
-                        <div class="component">
-                            <div class="component-icon">🔗</div>
-                            <div class="component-name">connector_health</div>
-                            <div class="component-desc">PACS system status</div>
-                        </div>
+                <div class="pipeline-stage">
+                    <div class="pipeline-box stage-dashboard">
+                        <div class="pipeline-icon">📊</div>
+                        <div class="pipeline-name">Dashboards</div>
+                        <div class="pipeline-desc">Role-based views</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Value cards -->
+            <div class="value-cards">
+                <div class="value-card">
+                    <div class="value-card-icon">🔌</div>
+                    <div class="value-card-title">Connect Any PACS</div>
+                    <div class="value-card-desc">Pre-built connectors for all major physical access control systems. No rip-and-replace required.</div>
+                </div>
+                <div class="value-card">
+                    <div class="value-card-icon">⏱️</div>
+                    <div class="value-card-title">Real-Time Updates</div>
+                    <div class="value-card-desc">See badge events within 2 seconds of occurrence. Streaming CDC ensures zero data lag.</div>
+                </div>
+                <div class="value-card">
+                    <div class="value-card-icon">👥</div>
+                    <div class="value-card-title">Role-Based Views</div>
+                    <div class="value-card-desc">CEOs see executive summaries. SOC sees real-time threats. Everyone gets relevant insights.</div>
+                </div>
+                <div class="value-card">
+                    <div class="value-card-icon">🤖</div>
+                    <div class="value-card-title">AI-Powered Insights</div>
+                    <div class="value-card-desc">Natural language dashboard builder creates custom visualizations on demand.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 1: Data Pipeline -->
+        <div class="slide" id="slide-1">
+            <h2 style="text-align: center; margin-bottom: 40px;">Real-Time Data Pipeline</h2>
+
+            <!-- Detailed left-to-right pipeline -->
+            <div class="pipeline" style="gap: 0;">
+                <div class="pipeline-stage">
+                    <div class="pipeline-box stage-pacs">
+                        <div class="pipeline-icon">🚪</div>
+                        <div class="pipeline-name">PACS</div>
+                        <div class="pipeline-desc">4 Connectors<br/>Lenel, C-CURE, S2, Genetec</div>
                     </div>
                 </div>
 
-                <div class="arrow arrow-up">
-                    <div class="arrow-head"></div>
-                    <div class="arrow-line"></div>
-                    <div class="arrow-label">Event Ingestion</div>
+                <div class="pipeline-arrow">
+                    <svg viewBox="0 0 40 24"><path d="M0 12 L30 12"/><polygon points="28,6 40,12 28,18"/></svg>
                 </div>
 
-                <!-- PACS Layer -->
-                <div class="layer pacs-layer">
-                    <div class="layer-title">Physical Access Control Systems</div>
-                    <div class="components-grid">
-                        <div class="component">
-                            <div class="component-icon">🏢</div>
-                            <div class="component-name">Lenel</div>
-                            <div class="component-desc">OnGuard integration</div>
+                <div class="pipeline-stage">
+                    <div class="pipeline-box stage-mysql">
+                        <div class="pipeline-icon">🗃️</div>
+                        <div class="pipeline-name">MySQL</div>
+                        <div class="pipeline-desc">Operational DB<br/>Write buffer</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-arrow">
+                    <svg viewBox="0 0 40 24"><path d="M0 12 L30 12"/><polygon points="28,6 40,12 28,18"/></svg>
+                </div>
+
+                <div class="pipeline-stage">
+                    <div class="pipeline-box stage-cdc">
+                        <div class="pipeline-icon">📡</div>
+                        <div class="pipeline-name">Debezium</div>
+                        <div class="pipeline-desc">CDC Streaming<br/>via Redpanda</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-arrow">
+                    <svg viewBox="0 0 40 24"><path d="M0 12 L30 12"/><polygon points="28,6 40,12 28,18"/></svg>
+                </div>
+
+                <div class="pipeline-stage">
+                    <div class="pipeline-box stage-clickhouse">
+                        <div class="pipeline-icon">🚀</div>
+                        <div class="pipeline-name">ClickHouse</div>
+                        <div class="pipeline-desc">Analytics OLAP<br/>Columnar storage</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-arrow">
+                    <svg viewBox="0 0 40 24"><path d="M0 12 L30 12"/><polygon points="28,6 40,12 28,18"/></svg>
+                </div>
+
+                <div class="pipeline-stage">
+                    <div class="pipeline-box stage-dashboard">
+                        <div class="pipeline-icon">💻</div>
+                        <div class="pipeline-name">Dashboard</div>
+                        <div class="pipeline-desc">React + Next.js<br/>2s refresh</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pipeline explanation -->
+            <div style="max-width: 900px; margin: 50px auto 0;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border-left: 3px solid #63b3ed;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">1. Event Capture</div>
+                        <div style="font-size: 0.85rem; color: #a0aec0;">Badge swipes from any PACS vendor are normalized into a unified event schema</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border-left: 3px solid #f6ad55;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">2. Operational Storage</div>
+                        <div style="font-size: 0.85rem; color: #a0aec0;">MySQL buffers writes and enables transaction consistency for operational needs</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border-left: 3px solid #68d391;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">3. Change Streaming</div>
+                        <div style="font-size: 0.85rem; color: #a0aec0;">Debezium captures every change via binlog, streams through Redpanda (Kafka-compatible)</div>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border-left: 3px solid #ed64a6;">
+                        <div style="font-weight: 600; margin-bottom: 8px;">4. Analytics Storage</div>
+                        <div style="font-size: 0.85rem; color: #a0aec0;">ClickHouse ingests CDC events for lightning-fast aggregations on millions of rows</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="latency-box">
+                <div style="font-size: 3rem; margin-bottom: 10px;">⚡</div>
+                <div style="font-size: 1.2rem; font-weight: 600;">End-to-End Latency</div>
+                <div style="color: #a0aec0; margin-top: 10px;">Badge swipe to dashboard: <strong style="color: #68d391;">&lt; 2 seconds</strong></div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Dashboards by Role -->
+        <div class="slide" id="slide-2">
+            <h2 style="text-align: center; margin-bottom: 15px;">Dashboards Tailored to Every Role</h2>
+            <p style="text-align: center; color: #a0aec0; margin-bottom: 40px;">Each persona sees exactly what they need—no clutter, no irrelevant data</p>
+
+            <div class="persona-grid">
+                <div class="persona-card persona-ceo">
+                    <div class="persona-header">
+                        <div class="persona-icon">👔</div>
+                        <div>
+                            <div class="persona-title">CEO / Executive</div>
+                            <div class="persona-role">Strategic oversight</div>
                         </div>
-                        <div class="component">
-                            <div class="component-icon">🔐</div>
-                            <div class="component-name">C-CURE</div>
-                            <div class="component-desc">9000 series</div>
+                    </div>
+                    <div class="persona-views">
+                        <span class="view-tag primary">Executive Overview</span>
+                        <span class="view-tag">Real-Time Risk</span>
+                        <span class="view-tag">Compliance</span>
+                        <span class="view-tag">Dashboard Builder</span>
+                    </div>
+                </div>
+
+                <div class="persona-card persona-soc">
+                    <div class="persona-header">
+                        <div class="persona-icon">🛡️</div>
+                        <div>
+                            <div class="persona-title">Security Operations</div>
+                            <div class="persona-role">Real-time monitoring</div>
                         </div>
-                        <div class="component">
-                            <div class="component-icon">🚪</div>
-                            <div class="component-name">S2</div>
-                            <div class="component-desc">NetBox connector</div>
+                    </div>
+                    <div class="persona-views">
+                        <span class="view-tag primary">Real-Time Risk</span>
+                        <span class="view-tag">Command Center</span>
+                        <span class="view-tag">Mustering</span>
+                        <span class="view-tag">Dashboard Builder</span>
+                    </div>
+                </div>
+
+                <div class="persona-card persona-facilities">
+                    <div class="persona-header">
+                        <div class="persona-icon">🏗️</div>
+                        <div>
+                            <div class="persona-title">Facilities Manager</div>
+                            <div class="persona-role">Site operations</div>
                         </div>
-                        <div class="component">
-                            <div class="component-icon">📹</div>
-                            <div class="component-name">Genetec</div>
-                            <div class="component-desc">Security Center</div>
+                    </div>
+                    <div class="persona-views">
+                        <span class="view-tag primary">Mustering</span>
+                        <span class="view-tag">Command Center</span>
+                        <span class="view-tag">Access Requests</span>
+                        <span class="view-tag">Dashboard Builder</span>
+                    </div>
+                </div>
+
+                <div class="persona-card persona-ithr">
+                    <div class="persona-header">
+                        <div class="persona-icon">💼</div>
+                        <div>
+                            <div class="persona-title">IT / HR Admin</div>
+                            <div class="persona-role">Identity lifecycle</div>
                         </div>
+                    </div>
+                    <div class="persona-views">
+                        <span class="view-tag primary">Access Hygiene</span>
+                        <span class="view-tag">Governance</span>
+                        <span class="view-tag">Access Requests</span>
+                        <span class="view-tag">Dashboard Builder</span>
+                    </div>
+                </div>
+
+                <div class="persona-card persona-compliance">
+                    <div class="persona-header">
+                        <div class="persona-icon">📋</div>
+                        <div>
+                            <div class="persona-title">Compliance Officer</div>
+                            <div class="persona-role">Audit & certifications</div>
+                        </div>
+                    </div>
+                    <div class="persona-views">
+                        <span class="view-tag primary">Compliance & Audit</span>
+                        <span class="view-tag">Access Hygiene</span>
+                        <span class="view-tag">Governance</span>
+                        <span class="view-tag">Dashboard Builder</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard screenshots or descriptions -->
+            <div style="margin-top: 50px; text-align: center;">
+                <h3 style="margin-bottom: 20px;">Key Dashboard Views</h3>
+                <div class="components-grid" style="max-width: 1000px; margin: 0 auto;">
+                    <div class="component">
+                        <div class="component-icon">📊</div>
+                        <div class="component-name">Executive Overview</div>
+                        <div class="component-desc">KPIs, risk trends, compliance scores at a glance</div>
+                    </div>
+                    <div class="component">
+                        <div class="component-icon">🚨</div>
+                        <div class="component-name">Real-Time Risk</div>
+                        <div class="component-desc">Live event stream, anomaly detection, video evidence</div>
+                    </div>
+                    <div class="component">
+                        <div class="component-icon">🎯</div>
+                        <div class="component-name">Command Center</div>
+                        <div class="component-desc">Charts, maps, connector health, operational metrics</div>
+                    </div>
+                    <div class="component">
+                        <div class="component-icon">👥</div>
+                        <div class="component-name">Mustering</div>
+                        <div class="component-desc">Emergency headcount, evacuation status by zone</div>
+                    </div>
+                    <div class="component">
+                        <div class="component-icon">✅</div>
+                        <div class="component-name">Compliance & Audit</div>
+                        <div class="component-desc">Training expiry, certifications, audit-ready reports</div>
+                    </div>
+                    <div class="component">
+                        <div class="component-icon">✨</div>
+                        <div class="component-name">Dashboard Builder</div>
+                        <div class="component-desc">AI-powered custom visualizations from natural language</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Slide 1: Data Layer -->
-        <div class="slide" id="slide-1">
+        <!-- Slide 3: Data Model -->
+        <div class="slide" id="slide-3">
             <h2 style="text-align: center; margin-bottom: 30px;">ClickHouse Data Model</h2>
 
-            <div class="layer database-layer" style="max-width: 1000px; margin: 0 auto;">
+            <div class="layer database-layer">
                 <div class="layer-title">Core Tables & Views</div>
 
                 <table class="data-table">
@@ -533,386 +720,96 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><code>access_events</code></td>
+                            <td><code>fact_access_events</code></td>
                             <td><span class="badge badge-purple">Fact</span></td>
                             <td>All badge swipe events from PACS</td>
                             <td><span class="badge badge-green">Real-time</span></td>
                         </tr>
                         <tr>
+                            <td><code>fact_connector_health</code></td>
+                            <td><span class="badge badge-purple">Fact</span></td>
+                            <td>PACS connector status & latency</td>
+                            <td><span class="badge badge-green">10s</span></td>
+                        </tr>
+                        <tr>
                             <td><code>v_kpi_current</code></td>
                             <td><span class="badge badge-blue">View</span></td>
-                            <td>Dashboard KPIs (15m/24h windows)</td>
-                            <td><span class="badge badge-orange">15s</span></td>
+                            <td>Dashboard KPIs (15m/60m/24h)</td>
+                            <td><span class="badge badge-orange">2s</span></td>
                         </tr>
                         <tr>
                             <td><code>v_timeseries_minute</code></td>
                             <td><span class="badge badge-blue">View</span></td>
                             <td>Per-minute aggregates for charts</td>
-                            <td><span class="badge badge-orange">15s</span></td>
+                            <td><span class="badge badge-orange">2s</span></td>
                         </tr>
                         <tr>
                             <td><code>v_recent_events</code></td>
                             <td><span class="badge badge-blue">View</span></td>
-                            <td>Last hour events with details</td>
-                            <td><span class="badge badge-green">5s</span></td>
+                            <td>Latest events with person/location names</td>
+                            <td><span class="badge badge-green">2s</span></td>
                         </tr>
                         <tr>
                             <td><code>v_door_hotspots</code></td>
                             <td><span class="badge badge-blue">View</span></td>
                             <td>Deny rate by location for map</td>
-                            <td><span class="badge badge-orange">30s</span></td>
+                            <td><span class="badge badge-orange">2s</span></td>
                         </tr>
                         <tr>
                             <td><code>v_connector_health_latest</code></td>
                             <td><span class="badge badge-blue">View</span></td>
-                            <td>PACS connector status</td>
-                            <td><span class="badge badge-orange">10s</span></td>
+                            <td>Current connector status</td>
+                            <td><span class="badge badge-orange">2s</span></td>
                         </tr>
                         <tr>
                             <td><code>v_insight_deny_spikes</code></td>
                             <td><span class="badge badge-blue">View</span></td>
                             <td>Anomaly detection (deny spikes)</td>
-                            <td><span class="badge badge-orange">30s</span></td>
-                        </tr>
-                        <tr>
-                            <td><code>persons</code></td>
-                            <td><span class="badge badge-purple">Dimension</span></td>
-                            <td>Identity data from HR/PIAM</td>
-                            <td><span class="badge badge-blue">Batch</span></td>
+                            <td><span class="badge badge-orange">2s</span></td>
                         </tr>
                     </tbody>
                 </table>
-
-                <div class="code-block">
-<span class="comment">-- Example: v_kpi_current view structure</span>
-<span class="keyword">SELECT</span>
-    tenant_id,
-    <span class="function">countIf</span>(event_time >= <span class="function">now</span>() - <span class="keyword">INTERVAL</span> <span class="string">15 MINUTE</span>) <span class="keyword">AS</span> <span class="variable">events_15m</span>,
-    <span class="function">countIf</span>(event_time >= <span class="function">now</span>() - <span class="keyword">INTERVAL</span> <span class="string">15 MINUTE</span> <span class="keyword">AND</span> result = <span class="string">'deny'</span>) <span class="keyword">AS</span> <span class="variable">denies_15m</span>,
-    <span class="function">round</span>(<span class="keyword">if</span>(events_15m > 0, denies_15m * 100.0 / events_15m, 0), 1) <span class="keyword">AS</span> <span class="variable">deny_rate_15m</span>,
-    <span class="function">countIf</span>(suspicious_flag = 1) <span class="keyword">AS</span> <span class="variable">suspicious_15m</span>
-<span class="keyword">FROM</span> piam.access_events
-<span class="keyword">WHERE</span> event_time >= <span class="function">now</span>() - <span class="keyword">INTERVAL</span> <span class="string">24 HOUR</span>
-<span class="keyword">GROUP BY</span> tenant_id;
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide 2: API Layer -->
-        <div class="slide" id="slide-2">
-            <h2 style="text-align: center; margin-bottom: 30px;">API Routes</h2>
-
-            <div class="layer api-layer" style="max-width: 1000px; margin: 0 auto;">
-                <div class="layer-title">/api/clickhouse - Query Proxy</div>
-
-                <div class="flow-diagram">
-                    <div class="flow-box">
-                        <div style="font-size: 2rem;">🖥️</div>
-                        <div style="font-weight: 600;">Frontend</div>
-                        <div style="font-size: 0.8rem; color: #a0aec0;">POST request</div>
-                    </div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-box">
-                        <div style="font-size: 2rem;">⚙️</div>
-                        <div style="font-weight: 600;">API Route</div>
-                        <div style="font-size: 0.8rem; color: #a0aec0;">Auth + Transform</div>
-                    </div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-box">
-                        <div style="font-size: 2rem;">🗄️</div>
-                        <div style="font-weight: 600;">ClickHouse</div>
-                        <div style="font-size: 0.8rem; color: #a0aec0;">:8123 HTTP</div>
-                    </div>
-                    <div class="flow-arrow">→</div>
-                    <div class="flow-box">
-                        <div style="font-size: 2rem;">📊</div>
-                        <div style="font-weight: 600;">JSON Response</div>
-                        <div style="font-size: 0.8rem; color: #a0aec0;">Formatted data</div>
-                    </div>
-                </div>
-
-                <div class="code-block">
-<span class="comment">// /api/clickhouse/route.ts</span>
-<span class="keyword">export async function</span> <span class="function">POST</span>(request: NextRequest) {
-  <span class="keyword">const</span> { query, params } = <span class="keyword">await</span> request.<span class="function">json</span>();
-
-  <span class="comment">// Build ClickHouse URL with auth</span>
-  <span class="keyword">const</span> url = <span class="keyword">new</span> <span class="function">URL</span>(clickhouseUrl);
-  url.searchParams.<span class="function">set</span>(<span class="string">'database'</span>, <span class="string">'piam'</span>);
-  url.searchParams.<span class="function">set</span>(<span class="string">'user'</span>, username);
-  url.searchParams.<span class="function">set</span>(<span class="string">'password'</span>, password);
-
-  <span class="comment">// Execute query</span>
-  <span class="keyword">const</span> response = <span class="keyword">await</span> <span class="function">fetch</span>(url, {
-    method: <span class="string">'POST'</span>,
-    body: query + <span class="string">' FORMAT JSON'</span>
-  });
-
-  <span class="keyword">return</span> NextResponse.<span class="function">json</span>(data);
-}
-                </div>
             </div>
 
-            <div class="layer api-layer" style="max-width: 1000px; margin: 30px auto 0;">
-                <div class="layer-title">/api/trickle - Live Event Generator</div>
-
-                <div class="code-block">
-<span class="comment">// Generates synthetic access events for demo</span>
-<span class="keyword">const</span> events = [];
-<span class="keyword">for</span> (<span class="keyword">let</span> i = 0; i < numEvents; i++) {
-  events.<span class="function">push</span>({
-    tenant_id: tenant,
-    person_name: <span class="variable">randomPerson</span>,
-    location_name: <span class="variable">randomDoor</span>,
-    result: Math.<span class="function">random</span>() > 0.15 ? <span class="string">'grant'</span> : <span class="string">'deny'</span>,
-    video_clip_url: <span class="variable">sampleVideos</span>[<span class="function">randomIndex</span>],
-    risk_score: Math.<span class="function">floor</span>(Math.<span class="function">random</span>() * 100)
-  });
-}
-
-<span class="comment">// INSERT into ClickHouse</span>
-<span class="keyword">await</span> <span class="function">fetch</span>(clickhouseUrl, { body: insertQuery });
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide 3: Hooks Layer -->
-        <div class="slide" id="slide-3">
-            <h2 style="text-align: center; margin-bottom: 30px;">Custom Hooks</h2>
-
-            <div class="layer hooks-layer" style="max-width: 1000px; margin: 0 auto;">
-                <div class="layer-title">useClickHouse Hook - Auto-Refresh with Fallback</div>
-
-                <div class="code-block">
-<span class="comment">// hooks/useClickHouse.ts</span>
-<span class="keyword">export function</span> <span class="function">useClickHouse</span>&lt;T&gt;({
-  query,
-  params,
-  refreshInterval = 15000,
-  fallbackData,
-  enabled = true
-}: UseClickHouseOptions&lt;T&gt;) {
-
-  <span class="keyword">const</span> [data, setData] = <span class="function">useState</span>&lt;T | null&gt;(fallbackData);
-  <span class="keyword">const</span> [loading, setLoading] = <span class="function">useState</span>(true);
-  <span class="keyword">const</span> [error, setError] = <span class="function">useState</span>&lt;Error | null&gt;(null);
-
-  <span class="function">useEffect</span>(() => {
-    <span class="keyword">const</span> fetchData = <span class="keyword">async</span> () => {
-      <span class="keyword">try</span> {
-        <span class="keyword">const</span> response = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'/api/clickhouse'</span>, {
-          method: <span class="string">'POST'</span>,
-          body: JSON.<span class="function">stringify</span>({ query, params })
-        });
-        <span class="keyword">const</span> result = <span class="keyword">await</span> response.<span class="function">json</span>();
-        <span class="function">setData</span>(result.data);
-      } <span class="keyword">catch</span> (err) {
-        <span class="function">setError</span>(err);
-        <span class="function">setData</span>(fallbackData); <span class="comment">// Graceful degradation</span>
-      }
-    };
-
-    fetchData();
-    <span class="keyword">const</span> interval = <span class="function">setInterval</span>(fetchData, refreshInterval);
-    <span class="keyword">return</span> () => <span class="function">clearInterval</span>(interval);
-  }, [query, refreshInterval]);
-
-  <span class="keyword">return</span> { data, loading, error, refetch };
-}
-                </div>
-
-                <div style="margin-top: 30px;">
-                    <div class="layer-title">Usage in Components</div>
-                    <div class="code-block">
-<span class="comment">// In a dashboard component</span>
-<span class="keyword">const</span> { data: kpis } = <span class="function">useClickHouse</span>({
-  query: <span class="string">`SELECT * FROM piam.v_kpi_current
-          WHERE tenant_id = {tenant:String}`</span>,
-  params: { tenant: <span class="string">'acme-corp'</span> },
-  refreshInterval: 15000,
-  fallbackData: { events_15m: 0, denies_15m: 0 }
-});
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide 4: Components -->
-        <div class="slide" id="slide-4">
-            <h2 style="text-align: center; margin-bottom: 30px;">React Components</h2>
-
-            <div class="layer frontend-layer" style="max-width: 1000px; margin: 0 auto;">
-                <div class="layer-title">Component Architecture</div>
-
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Component</th>
-                            <th>Data Source</th>
-                            <th>Refresh Rate</th>
-                            <th>Features</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><code>KPICards.tsx</code></td>
-                            <td>v_kpi_current</td>
-                            <td>15s</td>
-                            <td>Overall risk, compliance rate, incidents</td>
-                        </tr>
-                        <tr>
-                            <td><code>RiskTrendChart.tsx</code></td>
-                            <td>v_timeseries_minute</td>
-                            <td>15s</td>
-                            <td>7-day trend with Recharts</td>
-                        </tr>
-                        <tr>
-                            <td><code>DoorHotspotsMap.tsx</code></td>
-                            <td>v_door_hotspots</td>
-                            <td>30s</td>
-                            <td>Mapbox GL markers + clustering</td>
-                        </tr>
-                        <tr>
-                            <td><code>RealTimeRiskPanel.tsx</code></td>
-                            <td>v_recent_events</td>
-                            <td>5s</td>
-                            <td>Live stream, anomalies, video evidence</td>
-                        </tr>
-                        <tr>
-                            <td><code>ConnectorHealth.tsx</code></td>
-                            <td>v_connector_health_latest</td>
-                            <td>10s</td>
-                            <td>PACS system status indicators</td>
-                        </tr>
-                        <tr>
-                            <td><code>ComplianceOverview.tsx</code></td>
-                            <td>v_compliance_summary</td>
-                            <td>60s</td>
-                            <td>Training expiry, certifications</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="code-block">
-<span class="comment">// Example: RealTimeRiskPanel.tsx</span>
-<span class="keyword">export default function</span> <span class="function">RealTimeRiskPanel</span>({ tenant }) {
-  <span class="keyword">const</span> { data: events } = <span class="function">useClickHouse</span>({
-    query: <span class="string">`SELECT * FROM piam.v_recent_events
-            WHERE tenant_id = {tenant:String}
-            ORDER BY event_time DESC LIMIT 50`</span>,
-    params: { tenant },
-    refreshInterval: 5000
-  });
-
-  <span class="keyword">return</span> (
-    &lt;<span class="variable">div</span>&gt;
-      {events?.<span class="function">map</span>(event =&gt; (
-        &lt;<span class="variable">EventRow</span>
-          key={event.event_id}
-          person={event.person_name}
-          result={event.result}
-          videoUrl={event.video_clip_url}
-        /&gt;
-      ))}
-    &lt;/<span class="variable">div</span>&gt;
-  );
-}
-                </div>
-            </div>
-        </div>
-
-        <!-- Slide 5: Data Flow -->
-        <div class="slide" id="slide-5">
-            <h2 style="text-align: center; margin-bottom: 30px;">Complete Data Flow Sequence</h2>
-
-            <div class="layer" style="background: rgba(255,255,255,0.05); max-width: 1000px; margin: 0 auto;">
-                <div class="sequence">
-                    <div class="sequence-step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <div class="step-title">PACS Event Generated</div>
-                            <div class="step-desc">Employee badges at Server Room D1 via Lenel system. Event includes: badge_id, door_id, timestamp, result (grant/deny)</div>
+            <div style="margin-top: 40px; max-width: 1000px; margin-left: auto; margin-right: auto;">
+                <div class="layer" style="background: linear-gradient(135deg, rgba(99, 179, 237, 0.2), rgba(66, 153, 225, 0.2)); border: 1px solid rgba(99, 179, 237, 0.3);">
+                    <div class="layer-title">CDC Pipeline Components</div>
+                    <div class="components-grid">
+                        <div class="component">
+                            <div class="component-icon">🐬</div>
+                            <div class="component-name">MySQL 8.0</div>
+                            <div class="component-desc">Operational write buffer with binlog enabled</div>
                         </div>
-                    </div>
-
-                    <div class="sequence-step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <div class="step-title">Connector Ingests Event</div>
-                            <div class="step-desc">Lenel connector transforms raw event to unified schema, adds tenant_id, enriches with person_name from HR sync</div>
+                        <div class="component">
+                            <div class="component-icon">📡</div>
+                            <div class="component-name">Debezium 2.5</div>
+                            <div class="component-desc">MySQL CDC connector capturing all changes</div>
                         </div>
-                    </div>
-
-                    <div class="sequence-step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <div class="step-title">ClickHouse INSERT</div>
-                            <div class="step-desc">Event written to piam.access_events table. Partitioned by month, indexed on tenant_id + event_time</div>
+                        <div class="component">
+                            <div class="component-icon">🐼</div>
+                            <div class="component-name">Redpanda</div>
+                            <div class="component-desc">Kafka-compatible streaming platform</div>
                         </div>
-                    </div>
-
-                    <div class="sequence-step">
-                        <div class="step-number">4</div>
-                        <div class="step-content">
-                            <div class="step-title">Views Auto-Update</div>
-                            <div class="step-desc">v_kpi_current, v_recent_events, v_door_hotspots recalculate on query (no materialization needed for sub-second perf)</div>
-                        </div>
-                    </div>
-
-                    <div class="sequence-step">
-                        <div class="step-number">5</div>
-                        <div class="step-content">
-                            <div class="step-title">useClickHouse Polls</div>
-                            <div class="step-desc">Frontend hook fetches /api/clickhouse every 5-15s depending on view. Sends parameterized query with tenant filter</div>
-                        </div>
-                    </div>
-
-                    <div class="sequence-step">
-                        <div class="step-number">6</div>
-                        <div class="step-content">
-                            <div class="step-title">API Route Proxies</div>
-                            <div class="step-desc">Next.js server adds credentials, forwards to ClickHouse HTTP interface, transforms response to JSON</div>
-                        </div>
-                    </div>
-
-                    <div class="sequence-step">
-                        <div class="step-number">7</div>
-                        <div class="step-content">
-                            <div class="step-title">React State Updates</div>
-                            <div class="step-desc">Hook updates component state, React re-renders with new data. User sees event appear in Live Event Stream within 5 seconds</div>
-                        </div>
-                    </div>
-
-                    <div class="sequence-step">
-                        <div class="step-number">8</div>
-                        <div class="step-content">
-                            <div class="step-title">Video Evidence Available</div>
-                            <div class="step-desc">If event has video_clip_url, user can click to view synchronized footage from VMS integration</div>
+                        <div class="component">
+                            <div class="component-icon">🐍</div>
+                            <div class="component-name">Python Consumer</div>
+                            <div class="component-desc">Transforms CDC events to ClickHouse inserts</div>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <div style="text-align: center; margin-top: 40px; padding: 30px; background: rgba(102, 126, 234, 0.2); border-radius: 16px; max-width: 600px; margin-left: auto; margin-right: auto;">
-                <div style="font-size: 3rem; margin-bottom: 10px;">⚡</div>
-                <div style="font-size: 1.2rem; font-weight: 600;">End-to-End Latency</div>
-                <div style="color: #a0aec0; margin-top: 10px;">Badge swipe to dashboard display: <strong style="color: #68d391;">&lt; 5 seconds</strong></div>
             </div>
         </div>
 
         <footer>
-            <p>ClearView Intelligence - Physical Identity & Access Management Dashboard</p>
-            <p style="margin-top: 10px;">Built with Next.js, React, ClickHouse, Mapbox GL</p>
+            <p>ClearView Intelligence - Physical Identity & Access Management</p>
+            <p style="margin-top: 10px;">Built with Next.js, React, ClickHouse, MySQL, Debezium, Redpanda</p>
         </footer>
     </div>
 
     <script>
         function showSlide(index) {
-            // Hide all slides
             document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-
-            // Show selected slide
             document.getElementById('slide-' + index).classList.add('active');
             document.querySelectorAll('.nav-tab')[index].classList.add('active');
         }
@@ -920,7 +817,7 @@
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             const current = [...document.querySelectorAll('.nav-tab')].findIndex(t => t.classList.contains('active'));
-            if (e.key === 'ArrowRight' && current < 5) showSlide(current + 1);
+            if (e.key === 'ArrowRight' && current < 3) showSlide(current + 1);
             if (e.key === 'ArrowLeft' && current > 0) showSlide(current - 1);
         });
     </script>
