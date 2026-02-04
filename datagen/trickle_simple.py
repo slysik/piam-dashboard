@@ -201,8 +201,8 @@ def generate_event(ref_data: dict[str, Any], deny_rate: float = 0.25) -> dict[st
     # Determine result
     if random.random() > deny_rate:
         result = "grant"
-        deny_reason = None
-        deny_code = None
+        deny_reason = ""
+        deny_code = ""
     else:
         result = "deny"
         deny_reason = random.choice([
@@ -213,7 +213,7 @@ def generate_event(ref_data: dict[str, Any], deny_rate: float = 0.25) -> dict[st
 
     # Suspicious events (rare)
     suspicious_flag = 1 if random.random() < 0.05 else 0
-    suspicious_reason = None
+    suspicious_reason = ""
     suspicious_score = 0.0
     if suspicious_flag:
         suspicious_reason = random.choice([
@@ -338,9 +338,9 @@ def generate_access_request(ref_data: dict[str, Any]) -> dict[str, Any] | None:
         "rejected_at": None,
         "sla_hours": random.choice([24, 48, 72]),
         "within_sla": 1,
-        "approver_id": None,
-        "approval_notes": None,
-        "rejection_reason": None,
+        "approver_id": "",
+        "approval_notes": "",
+        "rejection_reason": "",
         "created_at": now,
         "updated_at": now,
     }
@@ -451,14 +451,14 @@ def update_access_request(
 
     # Find an approver from same tenant
     tenant_persons = [p for p in ref_data["persons"] if p["tenant_id"] == request["tenant_id"]]
-    approver_id = random.choice(tenant_persons)["person_id"] if tenant_persons else None
+    approver_id = random.choice(tenant_persons)["person_id"] if tenant_persons else ""
 
     new_status = None
     approved_at = None
     provisioned_at = None
     rejected_at = None
-    approval_notes = None
-    rejection_reason = None
+    approval_notes = ""
+    rejection_reason = ""
 
     if current_status == "submitted":
         # Move to pending_approval (80%) or stay submitted (20%)

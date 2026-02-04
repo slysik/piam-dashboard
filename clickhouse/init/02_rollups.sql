@@ -9,7 +9,7 @@
 -- Minute-level rollup for time-series charts
 CREATE TABLE IF NOT EXISTS piam.rollup_access_minute
 (
-    tenant_id       String,
+    tenant_id       LowCardinality(String),
     site_id         String,
     location_id     String,
     minute          DateTime,
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS piam.rollup_access_minute
     denies          UInt64,
     suspicious      UInt64,
     unique_badges   AggregateFunction(uniq, String),
-    unique_persons  AggregateFunction(uniq, Nullable(String))
+    unique_persons  AggregateFunction(uniq, String)
 )
 ENGINE = AggregatingMergeTree()
 ORDER BY (tenant_id, minute, site_id, location_id);
@@ -40,17 +40,19 @@ FROM piam.fact_access_events
 GROUP BY tenant_id, site_id, location_id, minute;
 
 -- Hourly door rollup
+-- NOTE: deny_rate removed — SummingMergeTree sums all numeric columns on merge,
+-- which produces incorrect results for pre-computed ratios. Compute deny_rate
+-- at query time from grants/denies/total_events instead.
 CREATE TABLE IF NOT EXISTS piam.rollup_door_hour
 (
-    tenant_id       String,
+    tenant_id       LowCardinality(String),
     site_id         String,
     location_id     String,
     hour            DateTime,
     total_events    UInt64,
     grants          UInt64,
     denies          UInt64,
-    suspicious      UInt64,
-    deny_rate       Float64
+    suspicious      UInt64
 )
 ENGINE = SummingMergeTree()
 ORDER BY (tenant_id, hour, site_id, location_id);
@@ -65,15 +67,14 @@ AS SELECT
     count() AS total_events,
     countIf(result IN ('grant', 'granted')) AS grants,
     countIf(result IN ('deny', 'denied')) AS denies,
-    countIf(suspicious_flag = 1) AS suspicious,
-    if(count() > 0, countIf(result IN ('deny', 'denied')) * 100.0 / count(), 0) AS deny_rate
+    countIf(suspicious_flag = 1) AS suspicious
 FROM piam.fact_access_events
 GROUP BY tenant_id, site_id, location_id, hour;
 
 -- Baseline table (populated by 03_baselines.sql)
 CREATE TABLE IF NOT EXISTS piam.rollup_baseline_hour_of_week
 (
-    tenant_id           String,
+    tenant_id           LowCardinality(String),
     site_id             String,
     location_id         String,
     hour_of_week        UInt8,

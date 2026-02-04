@@ -10,7 +10,7 @@ CREATE DATABASE IF NOT EXISTS piam;
 
 CREATE TABLE IF NOT EXISTS piam.dim_tenant
 (
-    tenant_id       String,
+    tenant_id       LowCardinality(String),
     tenant_name     String,
     industry        LowCardinality(String),
     timezone        String DEFAULT 'America/New_York',
@@ -22,7 +22,7 @@ ORDER BY tenant_id;
 CREATE TABLE IF NOT EXISTS piam.dim_site
 (
     site_id         String,
-    tenant_id       String,
+    tenant_id       LowCardinality(String),
     site_name       String,
     site_type       LowCardinality(String),
     address         String,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS piam.dim_location
 (
     location_id     String,
     site_id         String,
-    tenant_id       String,
+    tenant_id       LowCardinality(String),
     location_name   String,
     location_type   LowCardinality(String),
     door_type       LowCardinality(String),
@@ -61,18 +61,18 @@ ORDER BY (tenant_id, site_id, location_id);
 CREATE TABLE IF NOT EXISTS piam.dim_person
 (
     person_id       String,
-    tenant_id       String,
+    tenant_id       LowCardinality(String),
     badge_id        String,
     first_name      String,
     last_name       String,
     email           String,
-    phone           Nullable(String),
+    phone           String DEFAULT '',
     department      LowCardinality(String),
     job_title       String,
-    manager_id      Nullable(String),
+    manager_id      String DEFAULT '',
     person_type     LowCardinality(String),
     is_contractor   UInt8 DEFAULT 0,
-    contractor_company  Nullable(String),
+    contractor_company  String DEFAULT '',
     hire_date       Date,
     termination_date    Nullable(Date),
     badge_status    LowCardinality(String) DEFAULT 'ACTIVE',
@@ -87,7 +87,7 @@ ALTER TABLE piam.dim_person ADD INDEX IF NOT EXISTS idx_badge_id badge_id TYPE b
 CREATE TABLE IF NOT EXISTS piam.dim_entitlement
 (
     entitlement_id  String,
-    tenant_id       String,
+    tenant_id       LowCardinality(String),
     person_id       String,
     location_id     String,
     access_level    LowCardinality(String),
@@ -95,9 +95,9 @@ CREATE TABLE IF NOT EXISTS piam.dim_entitlement
     valid_from      DateTime64(3),
     valid_until     Nullable(DateTime64(3)),
     approval_type   LowCardinality(String),
-    approved_by     Nullable(String),
+    approved_by     String DEFAULT '',
     status          LowCardinality(String),
-    revocation_reason   Nullable(String),
+    revocation_reason   String DEFAULT '',
     created_at      DateTime64(3) DEFAULT now64(3),
     updated_at      DateTime64(3) DEFAULT now64(3)
 )
@@ -111,12 +111,12 @@ ORDER BY (tenant_id, person_id, location_id, entitlement_id);
 CREATE TABLE IF NOT EXISTS piam.fact_access_events
 (
     event_id            String,
-    tenant_id           String,
+    tenant_id           LowCardinality(String),
     event_time          DateTime64(3),
     received_time       DateTime64(3) DEFAULT now64(3),
 
     -- Who
-    person_id           Nullable(String),
+    person_id           String DEFAULT '',
     badge_id            String,
 
     -- Where
@@ -127,8 +127,8 @@ CREATE TABLE IF NOT EXISTS piam.fact_access_events
     direction           LowCardinality(String),
     result              LowCardinality(String),
     event_type          LowCardinality(String),
-    deny_reason         Nullable(String),
-    deny_code           Nullable(String),
+    deny_reason         String DEFAULT '',
+    deny_code           String DEFAULT '',
 
     -- Source
     pacs_source         LowCardinality(String),
@@ -137,7 +137,7 @@ CREATE TABLE IF NOT EXISTS piam.fact_access_events
 
     -- Analytics
     suspicious_flag     UInt8 DEFAULT 0,
-    suspicious_reason   Nullable(String),
+    suspicious_reason   String DEFAULT '',
     suspicious_score    Float32 DEFAULT 0,
 
     processed_at        DateTime64(3) DEFAULT now64(3)
@@ -145,7 +145,7 @@ CREATE TABLE IF NOT EXISTS piam.fact_access_events
 ENGINE = MergeTree()
 PARTITION BY toYYYYMM(event_time)
 ORDER BY (tenant_id, event_time, location_id, event_id)
-TTL event_time + INTERVAL 90 DAY;
+TTL toDateTime(event_time) + INTERVAL 90 DAY;
 
 ALTER TABLE piam.fact_access_events ADD INDEX IF NOT EXISTS idx_person_id person_id TYPE bloom_filter GRANULARITY 4;
 ALTER TABLE piam.fact_access_events ADD INDEX IF NOT EXISTS idx_badge_id badge_id TYPE bloom_filter GRANULARITY 4;
@@ -153,41 +153,41 @@ ALTER TABLE piam.fact_access_events ADD INDEX IF NOT EXISTS idx_result result TY
 
 CREATE TABLE IF NOT EXISTS piam.fact_connector_health
 (
-    tenant_id           String,
+    tenant_id           LowCardinality(String),
     connector_id        String,
     connector_name      String,
     pacs_type           LowCardinality(String),
-    pacs_version        Nullable(String),
+    pacs_version        String DEFAULT '',
     check_time          DateTime64(3),
     status              LowCardinality(String),
     latency_ms          UInt32,
     events_per_minute   Float32,
     error_count_1h      UInt32 DEFAULT 0,
     last_event_time     Nullable(DateTime64(3)),
-    error_message       Nullable(String),
-    error_code          Nullable(String),
-    endpoint_url        Nullable(String),
+    error_message       String DEFAULT '',
+    error_code          String DEFAULT '',
+    endpoint_url        String DEFAULT '',
     last_successful_sync    Nullable(DateTime64(3))
 )
 ENGINE = MergeTree()
 ORDER BY (tenant_id, connector_id, check_time)
-TTL check_time + INTERVAL 7 DAY;
+TTL toDateTime(check_time) + INTERVAL 7 DAY;
 
 CREATE TABLE IF NOT EXISTS piam.fact_compliance_status
 (
-    tenant_id           String,
+    tenant_id           LowCardinality(String),
     person_id           String,
     requirement_type    LowCardinality(String),
     requirement_name    String,
     status              LowCardinality(String),
     issue_date          Nullable(Date),
     expiry_date         Nullable(Date),
-    issuing_authority   Nullable(String),
-    certificate_number  Nullable(String),
+    issuing_authority   String DEFAULT '',
+    certificate_number  String DEFAULT '',
     last_checked        DateTime64(3),
     checked_by          LowCardinality(String),
-    notes               Nullable(String),
-    evidence_url        Nullable(String)
+    notes               String DEFAULT '',
+    evidence_url        String DEFAULT ''
 )
 ENGINE = ReplacingMergeTree(last_checked)
 ORDER BY (tenant_id, person_id, requirement_type);

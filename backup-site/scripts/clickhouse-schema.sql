@@ -1,6 +1,6 @@
 -- ClearView Intelligence - ClickHouse Schema
 -- Run this script to create all required tables and views for live data mode
--- 
+--
 -- Prerequisites:
 --   1. ClickHouse running (local Docker or Cloud)
 --   2. Database 'piam' created
@@ -22,7 +22,7 @@ CREATE DATABASE IF NOT EXISTS piam;
 -- Access Events - Core event log from all PACS systems
 CREATE TABLE IF NOT EXISTS piam.access_events (
     event_id UUID DEFAULT generateUUIDv4(),
-    tenant_id String,
+    tenant_id LowCardinality(String),
     event_time DateTime64(3) DEFAULT now64(3),
     person_id String,
     person_name String,
@@ -33,46 +33,45 @@ CREATE TABLE IF NOT EXISTS piam.access_events (
     lat Float64 DEFAULT 0,
     lon Float64 DEFAULT 0,
     result Enum8('grant' = 1, 'deny' = 2),
-    deny_reason Nullable(String),
+    deny_reason String DEFAULT '',
     connector_id String,
-    pacs_type String,
+    pacs_type LowCardinality(String),
     suspicious_flag UInt8 DEFAULT 0,
-    anomaly_type Nullable(String),
+    anomaly_type String DEFAULT '',
     risk_score UInt8 DEFAULT 0,
-    video_clip_url Nullable(String),
-    raw_payload String DEFAULT '{}',
-    INDEX idx_tenant_time (tenant_id, event_time) TYPE minmax GRANULARITY 1
+    video_clip_url String DEFAULT '',
+    raw_payload String DEFAULT '{}'
 ) ENGINE = MergeTree()
 PARTITION BY toYYYYMM(event_time)
 ORDER BY (tenant_id, event_time, event_id);
 
 -- Connector Health - Status of PACS connectors
 CREATE TABLE IF NOT EXISTS piam.connector_health (
-    tenant_id String,
+    tenant_id LowCardinality(String),
     connector_id String,
     connector_name String,
-    pacs_type String,
+    pacs_type LowCardinality(String),
     status Enum8('healthy' = 1, 'degraded' = 2, 'offline' = 3),
     latency_ms UInt32 DEFAULT 0,
     events_per_minute Float32 DEFAULT 0,
     last_check DateTime64(3) DEFAULT now64(3),
     last_event_time Nullable(DateTime64(3)),
-    error_message Nullable(String)
+    error_message String DEFAULT ''
 ) ENGINE = ReplacingMergeTree(last_check)
 ORDER BY (tenant_id, connector_id);
 
 -- Persons - Identity data synced from HR/PIAM
 CREATE TABLE IF NOT EXISTS piam.persons (
-    tenant_id String,
+    tenant_id LowCardinality(String),
     person_id String,
     full_name String,
-    email Nullable(String),
-    department Nullable(String),
-    job_title Nullable(String),
-    manager_id Nullable(String),
+    email String DEFAULT '',
+    department String DEFAULT '',
+    job_title String DEFAULT '',
+    manager_id String DEFAULT '',
     person_type Enum8('employee' = 1, 'contractor' = 2, 'visitor' = 3) DEFAULT 'employee',
     is_contractor UInt8 DEFAULT 0,
-    contractor_company Nullable(String),
+    contractor_company String DEFAULT '',
     hire_date Nullable(Date),
     termination_date Nullable(Date),
     badge_status Enum8('active' = 1, 'disabled' = 2, 'lost' = 3, 'expired' = 4) DEFAULT 'active',
@@ -85,15 +84,15 @@ ORDER BY (tenant_id, person_id);
 
 -- Compliance Records - Training, certifications, background checks
 CREATE TABLE IF NOT EXISTS piam.compliance_records (
-    tenant_id String,
+    tenant_id LowCardinality(String),
     person_id String,
-    requirement_type String,
+    requirement_type LowCardinality(String),
     requirement_name String,
     status Enum8('compliant' = 1, 'expiring' = 2, 'expired' = 3, 'non_compliant' = 4),
     issue_date Nullable(Date),
     expiry_date Nullable(Date),
     days_until_expiry Int32 DEFAULT 0,
-    verified_by Nullable(String),
+    verified_by String DEFAULT '',
     verified_at Nullable(DateTime64(3)),
     updated_at DateTime64(3) DEFAULT now64(3)
 ) ENGINE = ReplacingMergeTree(updated_at)
@@ -101,14 +100,14 @@ ORDER BY (tenant_id, person_id, requirement_type);
 
 -- Entitlements - Access grants and policies
 CREATE TABLE IF NOT EXISTS piam.entitlements (
-    tenant_id String,
+    tenant_id LowCardinality(String),
     entitlement_id UUID DEFAULT generateUUIDv4(),
     person_id String,
     person_name String,
     zone_id String,
     zone_name String,
     grant_type Enum8('policy' = 1, 'manual' = 2, 'exception' = 3),
-    granted_by Nullable(String),
+    granted_by String DEFAULT '',
     granted_at DateTime64(3) DEFAULT now64(3),
     expires_at Nullable(DateTime64(3)),
     last_used Nullable(DateTime64(3)),
@@ -119,13 +118,13 @@ ORDER BY (tenant_id, person_id, zone_id);
 
 -- Access Requests - Self-service request workflow
 CREATE TABLE IF NOT EXISTS piam.access_requests (
-    tenant_id String,
+    tenant_id LowCardinality(String),
     request_id UUID DEFAULT generateUUIDv4(),
     person_id String,
     person_name String,
     zone_id String,
     zone_name String,
-    request_type String,
+    request_type LowCardinality(String),
     status Enum8('submitted' = 1, 'pending_approval' = 2, 'approved' = 3, 'rejected' = 4, 'provisioned' = 5),
     risk_level Enum8('low' = 1, 'medium' = 2, 'high' = 3, 'critical' = 4) DEFAULT 'low',
     submitted_at DateTime64(3) DEFAULT now64(3),
@@ -373,7 +372,7 @@ FROM (
         countIf(event_time >= now() - INTERVAL 24 HOUR AND suspicious_flag = 1) AS suspicious_24h,
         countIf(event_time >= now() - INTERVAL 24 HOUR AND suspicious_flag = 1) * 1.0 /
             nullIf(countIf(event_time >= now() - INTERVAL 24 HOUR), 0) AS suspicious_rate,
-        countIf(event_time >= now() - INTERVAL 24 HOUR AND anomaly_type IS NOT NULL) AS anomaly_count
+        countIf(event_time >= now() - INTERVAL 24 HOUR AND anomaly_type != '') AS anomaly_count
     FROM piam.access_events
     GROUP BY tenant_id
 ) e
@@ -413,11 +412,11 @@ SELECT
     37.7749 + (rand() % 100) / 1000 AS lat,
     -122.4194 + (rand() % 100) / 1000 AS lon,
     if(rand() % 10 < 8, 'grant', 'deny') AS result,
-    if(result = 'deny', arrayElement(['Invalid Badge', 'Expired', 'No Access', 'Time Restriction'], rand() % 4 + 1), NULL) AS deny_reason,
+    if(result = 'deny', arrayElement(['Invalid Badge', 'Expired', 'No Access', 'Time Restriction'], rand() % 4 + 1), '') AS deny_reason,
     arrayElement(['lenel-01', 'ccure-01', 's2-01', 'genetec-01'], rand() % 4 + 1) AS connector_id,
     arrayElement(['Lenel', 'C-CURE', 'S2', 'Genetec'], rand() % 4 + 1) AS pacs_type,
     if(rand() % 20 = 0, 1, 0) AS suspicious_flag,
-    if(suspicious_flag = 1, arrayElement(['after_hours', 'denied_streak', 'impossible_travel'], rand() % 3 + 1), NULL) AS anomaly_type,
+    if(suspicious_flag = 1, arrayElement(['after_hours', 'denied_streak', 'impossible_travel'], rand() % 3 + 1), '') AS anomaly_type,
     rand() % 100 AS risk_score,
     '{"source": "test"}' AS raw_payload
 FROM numbers(1000);

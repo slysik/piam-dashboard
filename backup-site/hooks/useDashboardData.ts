@@ -370,7 +370,7 @@ export function useComplianceWithFallback(
       SELECT
         person_id as id,
         full_name as name,
-        coalesce(contractor_company, department) as company,
+        if(contractor_company != '', contractor_company, department) as company,
         '' as trade,
         person_id as badgeId,
         if(is_contractor = 1, 'contractor', 'employee') as personType,

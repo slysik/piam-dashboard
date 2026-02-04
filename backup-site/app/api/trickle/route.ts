@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
       }
 
       const values = events.map(e =>
-        `(generateUUIDv4(), '${e.tenant_id}', now64(3), '${e.person_id}', '${e.person_name}', '${e.badge_id}', '${e.location_id}', '${e.location_name}', '${e.door_id}', ${e.lat}, ${e.lon}, '${e.result}', ${e.deny_reason ? `'${e.deny_reason}'` : 'NULL'}, '${e.connector_id}', '${e.pacs_type}', ${e.suspicious_flag}, ${e.anomaly_type ? `'${e.anomaly_type}'` : 'NULL'}, ${e.risk_score}, ${e.video_clip_url ? `'${e.video_clip_url}'` : 'NULL'}, '{}')`
+        `(generateUUIDv4(), '${e.tenant_id}', now64(3), '${e.person_id}', '${e.person_name}', '${e.badge_id}', '${e.location_id}', '${e.location_name}', '${e.door_id}', ${e.lat}, ${e.lon}, '${e.result}', '${e.deny_reason || ''}', '${e.connector_id}', '${e.pacs_type}', ${e.suspicious_flag}, '${e.anomaly_type || ''}', ${e.risk_score}, '${e.video_clip_url || ''}', '{}')`
       ).join(',\n');
 
       const insertQuery = `

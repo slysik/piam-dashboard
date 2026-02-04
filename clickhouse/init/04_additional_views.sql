@@ -10,7 +10,7 @@
 CREATE TABLE IF NOT EXISTS piam.fact_access_requests
 (
     request_id          String,
-    tenant_id           String,
+    tenant_id           LowCardinality(String),
     person_id           String,
     requester_id        String,
     location_id         String,
@@ -32,9 +32,9 @@ CREATE TABLE IF NOT EXISTS piam.fact_access_requests
     within_sla          UInt8 DEFAULT 1,
 
     -- Approval chain
-    approver_id         Nullable(String),
-    approval_notes      Nullable(String),
-    rejection_reason    Nullable(String),
+    approver_id         String DEFAULT '',
+    approval_notes      String DEFAULT '',
+    rejection_reason    String DEFAULT '',
 
     created_at          DateTime64(3) DEFAULT now64(3),
     updated_at          DateTime64(3) DEFAULT now64(3)
