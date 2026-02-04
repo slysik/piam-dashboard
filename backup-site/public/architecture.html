@@ -361,11 +361,305 @@
             font-size: 0.9rem;
         }
 
+        /* ClickHouse ERD */
+        .erd-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .erd-column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .erd-column-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #a0aec0;
+            text-align: center;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            margin-bottom: 4px;
+        }
+
+        .erd-table {
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: default;
+        }
+
+        .erd-table:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .erd-table-header {
+            padding: 10px 14px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .erd-table-header .erd-engine {
+            margin-left: auto;
+            font-weight: 400;
+            font-size: 0.6rem;
+            opacity: 0.7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .erd-table-body {
+            padding: 8px 14px 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px 8px;
+        }
+
+        .erd-col {
+            font-size: 0.65rem;
+            color: #cbd5e0;
+            padding: 2px 0;
+            white-space: nowrap;
+        }
+
+        .erd-col.pk {
+            color: #fbd38d;
+            font-weight: 600;
+        }
+
+        .erd-col.fk {
+            color: #90cdf4;
+        }
+
+        .erd-col.lc {
+            color: #b794f4;
+        }
+
+        /* ERD table color variants */
+        .erd-dim .erd-table-header {
+            background: linear-gradient(135deg, rgba(99, 179, 237, 0.5), rgba(66, 153, 225, 0.4));
+        }
+        .erd-dim .erd-table-body {
+            background: rgba(99, 179, 237, 0.08);
+            border: 1px solid rgba(99, 179, 237, 0.15);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .erd-fact .erd-table-header {
+            background: linear-gradient(135deg, rgba(237, 100, 166, 0.5), rgba(245, 101, 101, 0.4));
+        }
+        .erd-fact .erd-table-body {
+            background: rgba(237, 100, 166, 0.08);
+            border: 1px solid rgba(237, 100, 166, 0.15);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .erd-rollup .erd-table-header {
+            background: linear-gradient(135deg, rgba(72, 187, 120, 0.5), rgba(56, 178, 172, 0.4));
+        }
+        .erd-rollup .erd-table-body {
+            background: rgba(72, 187, 120, 0.08);
+            border: 1px solid rgba(72, 187, 120, 0.15);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .erd-view .erd-table-header {
+            background: linear-gradient(135deg, rgba(159, 122, 234, 0.5), rgba(118, 75, 162, 0.4));
+        }
+        .erd-view .erd-table-body {
+            background: rgba(159, 122, 234, 0.08);
+            border: 1px solid rgba(159, 122, 234, 0.15);
+            border-top: none;
+            border-radius: 0 0 10px 10px;
+        }
+
+        /* ERD Legend */
+        .erd-legend {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .erd-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: #a0aec0;
+        }
+
+        .erd-legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        /* Best Practices Grid */
+        .bp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 16px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .bp-card {
+            background: rgba(255,255,255,0.04);
+            border-radius: 12px;
+            padding: 20px 22px;
+            border-left: 3px solid;
+            transition: all 0.3s;
+        }
+
+        .bp-card:hover {
+            background: rgba(255,255,255,0.07);
+            transform: translateX(4px);
+        }
+
+        .bp-card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .bp-card-icon {
+            font-size: 1.2rem;
+            width: 32px;
+            text-align: center;
+        }
+
+        .bp-card-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .bp-card-body {
+            font-size: 0.82rem;
+            color: #a0aec0;
+            line-height: 1.55;
+            padding-left: 42px;
+        }
+
+        .bp-card-body code {
+            background: rgba(255,255,255,0.1);
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #e2e8f0;
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+        }
+
+        .bp-card.bp-green { border-left-color: #68d391; }
+        .bp-card.bp-blue { border-left-color: #63b3ed; }
+        .bp-card.bp-pink { border-left-color: #ed64a6; }
+        .bp-card.bp-purple { border-left-color: #b794f4; }
+        .bp-card.bp-orange { border-left-color: #f6ad55; }
+        .bp-card.bp-teal { border-left-color: #4fd1c5; }
+
+        /* Engine strategy table */
+        .engine-table {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .engine-table th {
+            background: rgba(237, 100, 166, 0.25);
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #e2e8f0;
+        }
+
+        .engine-table td {
+            padding: 10px 16px;
+            font-size: 0.85rem;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            color: #cbd5e0;
+        }
+
+        .engine-table tr:hover td {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .engine-table td:first-child {
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .engine-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+        }
+
+        .engine-mt { background: rgba(237, 100, 166, 0.25); color: #f687b3; }
+        .engine-smt { background: rgba(72, 187, 120, 0.25); color: #68d391; }
+        .engine-amt { background: rgba(99, 179, 237, 0.25); color: #63b3ed; }
+        .engine-rmt { background: rgba(246, 173, 85, 0.25); color: #f6ad55; }
+
+        /* Section divider */
+        .section-divider {
+            text-align: center;
+            margin: 48px 0 32px;
+            position: relative;
+        }
+
+        .section-divider::before {
+            content: '';
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            top: 50%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        }
+
+        .section-divider span {
+            background: #1a1a2e;
+            padding: 0 20px;
+            position: relative;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #a0aec0;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             h1 { font-size: 1.8rem; }
             .pipeline { flex-direction: column; }
             .pipeline-arrow { transform: rotate(90deg); }
+            .erd-container { grid-template-columns: 1fr; }
+            .bp-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -391,6 +685,7 @@
             <div class="nav-tab" onclick="showSlide(1)">Data Pipeline</div>
             <div class="nav-tab" onclick="showSlide(2)">Dashboards by Role</div>
             <div class="nav-tab" onclick="showSlide(3)">Data Model</div>
+            <div class="nav-tab" onclick="showSlide(4)">ClickHouse</div>
         </nav>
 
         <!-- Slide 0: Overview -->
@@ -800,6 +1095,453 @@
             </div>
         </div>
 
+        <!-- Slide 4: ClickHouse Deep Dive -->
+        <div class="slide" id="slide-4">
+            <h2 style="text-align: center; margin-bottom: 8px;">ClickHouse Schema &amp; Best Practices</h2>
+            <p style="text-align: center; color: #a0aec0; margin-bottom: 32px; font-size: 0.95rem;">27 tables, views &amp; materialized views powering sub-second analytics</p>
+
+            <!-- ERD Legend -->
+            <div class="erd-legend">
+                <div class="erd-legend-item">
+                    <div class="erd-legend-swatch" style="background: linear-gradient(135deg, #63b3ed, #4299e1);"></div>
+                    Dimension Tables
+                </div>
+                <div class="erd-legend-item">
+                    <div class="erd-legend-swatch" style="background: linear-gradient(135deg, #ed64a6, #f56565);"></div>
+                    Fact Tables
+                </div>
+                <div class="erd-legend-item">
+                    <div class="erd-legend-swatch" style="background: linear-gradient(135deg, #48bb78, #38b2ac);"></div>
+                    Rollup Tables
+                </div>
+                <div class="erd-legend-item">
+                    <div class="erd-legend-swatch" style="background: linear-gradient(135deg, #9f7aea, #764ba2);"></div>
+                    Query Views
+                </div>
+                <div class="erd-legend-item" style="gap: 6px;">
+                    <span style="color: #fbd38d; font-weight: 700; font-size: 0.7rem;">PK</span> Order Key
+                </div>
+                <div class="erd-legend-item" style="gap: 6px;">
+                    <span style="color: #90cdf4; font-weight: 600; font-size: 0.7rem;">FK</span> Foreign Key
+                </div>
+                <div class="erd-legend-item" style="gap: 6px;">
+                    <span style="color: #b794f4; font-weight: 600; font-size: 0.7rem;">LC</span> LowCardinality
+                </div>
+            </div>
+
+            <!-- ERD Diagram -->
+            <div class="erd-container">
+                <!-- Column 1: Dimensions -->
+                <div class="erd-column">
+                    <div class="erd-column-label">Dimensions</div>
+
+                    <div class="erd-table erd-dim">
+                        <div class="erd-table-header">
+                            dim_tenant
+                            <span class="erd-engine">MergeTree</span>
+                        </div>
+                        <div class="erd-table-body">
+                            <span class="erd-col pk">tenant_id</span>
+                            <span class="erd-col">tenant_name</span>
+                            <span class="erd-col lc">industry</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-dim">
+                        <div class="erd-table-header">
+                            dim_site
+                            <span class="erd-engine">MergeTree</span>
+                        </div>
+                        <div class="erd-table-body">
+                            <span class="erd-col pk">tenant_id</span>
+                            <span class="erd-col pk">site_id</span>
+                            <span class="erd-col">site_name</span>
+                            <span class="erd-col lc">site_type</span>
+                            <span class="erd-col">lat/lon</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-dim">
+                        <div class="erd-table-header">
+                            dim_location
+                            <span class="erd-engine">MergeTree</span>
+                        </div>
+                        <div class="erd-table-body">
+                            <span class="erd-col pk">tenant_id</span>
+                            <span class="erd-col pk">site_id</span>
+                            <span class="erd-col pk">location_id</span>
+                            <span class="erd-col lc">door_type</span>
+                            <span class="erd-col lc">zone</span>
+                            <span class="erd-col">is_high_risk</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-dim">
+                        <div class="erd-table-header">
+                            dim_person
+                            <span class="erd-engine">MergeTree</span>
+                        </div>
+                        <div class="erd-table-body">
+                            <span class="erd-col pk">tenant_id</span>
+                            <span class="erd-col pk">person_id</span>
+                            <span class="erd-col">badge_id</span>
+                            <span class="erd-col lc">department</span>
+                            <span class="erd-col lc">person_type</span>
+                            <span class="erd-col lc">badge_status</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-dim">
+                        <div class="erd-table-header">
+                            dim_entitlement
+                            <span class="erd-engine">ReplacingMT</span>
+                        </div>
+                        <div class="erd-table-body">
+                            <span class="erd-col pk">tenant_id</span>
+                            <span class="erd-col pk">person_id</span>
+                            <span class="erd-col pk">location_id</span>
+                            <span class="erd-col lc">access_level</span>
+                            <span class="erd-col lc">status</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 2: Facts -->
+                <div class="erd-column">
+                    <div class="erd-column-label">Facts &amp; Rollups</div>
+
+                    <div class="erd-table erd-fact">
+                        <div class="erd-table-header">
+                            fact_access_events
+                            <span class="erd-engine">MergeTree</span>
+                        </div>
+                        <div class="erd-table-body">
+                            <span class="erd-col pk">tenant_id</span>
+                            <span class="erd-col pk">event_time</span>
+                            <span class="erd-col pk">location_id</span>
+                            <span class="erd-col pk">event_id</span>
+                            <span class="erd-col fk">person_id</span>
+                            <span class="erd-col fk">site_id</span>
+                            <span class="erd-col lc">result</span>
+                            <span class="erd-col lc">pacs_source</span>
+                            <span class="erd-col">suspicious_flag</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-fact">
+                        <div class="erd-table-header">
+                            fact_connector_health
+                            <span class="erd-engine">MergeTree</span>
+                        </div>
+                        <div class="erd-table-body">
+                            <span class="erd-col pk">tenant_id</span>
+                            <span class="erd-col pk">connector_id</span>
+                            <span class="erd-col pk">check_time</span>
+                            <span class="erd-col lc">status</span>
+                            <span class="erd-col">latency_ms</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-fact">
+                        <div class="erd-table-header">
+                            fact_compliance_status
+                            <span class="erd-engine">ReplacingMT</span>
+                        </div>
+                        <div class="erd-table-body">
+                            <span class="erd-col pk">tenant_id</span>
+                            <span class="erd-col pk">person_id</span>
+                            <span class="erd-col pk">requirement_type</span>
+                            <span class="erd-col lc">status</span>
+                            <span class="erd-col">expiry_date</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-fact">
+                        <div class="erd-table-header">
+                            fact_access_requests
+                            <span class="erd-engine">ReplacingMT</span>
+                        </div>
+                        <div class="erd-table-body">
+                            <span class="erd-col pk">tenant_id</span>
+                            <span class="erd-col pk">request_id</span>
+                            <span class="erd-col fk">person_id</span>
+                            <span class="erd-col fk">location_id</span>
+                            <span class="erd-col lc">status</span>
+                            <span class="erd-col">within_sla</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-rollup">
+                        <div class="erd-table-header">
+                            rollup_access_minute
+                            <span class="erd-engine">AggregatingMT</span>
+                        </div>
+                        <div class="erd-table-body">
+                            <span class="erd-col pk">tenant_id</span>
+                            <span class="erd-col pk">minute</span>
+                            <span class="erd-col">grants / denies</span>
+                            <span class="erd-col">uniqState(badge)</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-rollup">
+                        <div class="erd-table-header">
+                            rollup_door_hour
+                            <span class="erd-engine">SummingMT</span>
+                        </div>
+                        <div class="erd-table-body">
+                            <span class="erd-col pk">tenant_id</span>
+                            <span class="erd-col pk">hour</span>
+                            <span class="erd-col pk">location_id</span>
+                            <span class="erd-col">events / grants / denies</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Column 3: Views -->
+                <div class="erd-column">
+                    <div class="erd-column-label">Query Views</div>
+
+                    <div class="erd-table erd-view">
+                        <div class="erd-table-header">v_kpi_current</div>
+                        <div class="erd-table-body">
+                            <span class="erd-col">15m / 60m / 24h KPIs</span>
+                            <span class="erd-col">deny rate, suspicious count</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-view">
+                        <div class="erd-table-header">v_timeseries_minute</div>
+                        <div class="erd-table-body">
+                            <span class="erd-col">Per-minute grants/denies</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-view">
+                        <div class="erd-table-header">v_recent_events</div>
+                        <div class="erd-table-body">
+                            <span class="erd-col">JOIN person + site + location</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-view">
+                        <div class="erd-table-header">v_door_hotspots</div>
+                        <div class="erd-table-body">
+                            <span class="erd-col">Deny rate by door for map</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-view">
+                        <div class="erd-table-header">v_insight_deny_spikes</div>
+                        <div class="erd-table-body">
+                            <span class="erd-col">Anomaly: current vs baseline</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-view">
+                        <div class="erd-table-header">v_compliance_summary</div>
+                        <div class="erd-table-body">
+                            <span class="erd-col">Expiry tracking per person</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-view">
+                        <div class="erd-table-header">v_access_hygiene</div>
+                        <div class="erd-table-body">
+                            <span class="erd-col">Orphan badges, dormant access</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-view">
+                        <div class="erd-table-header">v_connector_health_latest</div>
+                        <div class="erd-table-body">
+                            <span class="erd-col">argMax() for latest status</span>
+                        </div>
+                    </div>
+
+                    <div class="erd-table erd-view">
+                        <div class="erd-table-header">v_executive_risk</div>
+                        <div class="erd-table-body">
+                            <span class="erd-col">Composite risk scoring</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Engine Selection Strategy -->
+            <div class="section-divider"><span>Engine Selection Strategy</span></div>
+
+            <table class="engine-table">
+                <thead>
+                    <tr>
+                        <th>Engine</th>
+                        <th>Used For</th>
+                        <th>Why</th>
+                        <th>Tables</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="engine-badge engine-mt">MergeTree</span></td>
+                        <td>Immutable event logs</td>
+                        <td>Append-only, highest throughput for time-series writes</td>
+                        <td>fact_access_events, fact_connector_health, dim_*</td>
+                    </tr>
+                    <tr>
+                        <td><span class="engine-badge engine-smt">SummingMT</span></td>
+                        <td>Hourly door rollup</td>
+                        <td>Auto-sums counters on merge &mdash; no ratios stored (computed at query time)</td>
+                        <td>rollup_door_hour</td>
+                    </tr>
+                    <tr>
+                        <td><span class="engine-badge engine-amt">AggregatingMT</span></td>
+                        <td>Minute-level rollup</td>
+                        <td>Stores <code>uniqState()</code> for accurate cardinality across merges</td>
+                        <td>rollup_access_minute</td>
+                    </tr>
+                    <tr>
+                        <td><span class="engine-badge engine-rmt">ReplacingMT</span></td>
+                        <td>Mutable records</td>
+                        <td>Deduplicates by ORDER BY key, keeps latest version by <code>updated_at</code></td>
+                        <td>dim_entitlement, fact_compliance_status, fact_access_requests</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Best Practices -->
+            <div class="section-divider"><span>Best Practices Deployed</span></div>
+
+            <div class="bp-grid">
+                <div class="bp-card bp-purple">
+                    <div class="bp-card-header">
+                        <div class="bp-card-icon">📦</div>
+                        <div class="bp-card-title">LowCardinality Encoding</div>
+                    </div>
+                    <div class="bp-card-body">
+                        <code>LowCardinality(String)</code> on <code>tenant_id</code>, <code>department</code>, <code>result</code>, <code>pacs_source</code>, and 12+ columns. Dictionary-encodes values with &lt;10K cardinality for 2&ndash;5x compression.
+                    </div>
+                </div>
+
+                <div class="bp-card bp-pink">
+                    <div class="bp-card-header">
+                        <div class="bp-card-icon">🚫</div>
+                        <div class="bp-card-title">No Ratios in SummingMergeTree</div>
+                    </div>
+                    <div class="bp-card-body">
+                        Removed pre-computed <code>deny_rate</code> from <code>rollup_door_hour</code>. SummingMergeTree sums all numeric columns on merge &mdash; percentages get corrupted. Rates computed at query time from raw counts.
+                    </div>
+                </div>
+
+                <div class="bp-card bp-green">
+                    <div class="bp-card-header">
+                        <div class="bp-card-icon">🔗</div>
+                        <div class="bp-card-title">Materialized View Pipeline</div>
+                    </div>
+                    <div class="bp-card-body">
+                        Two MVs (<code>mv_rollup_access_minute</code>, <code>mv_rollup_door_hour</code>) auto-populate rollup tables on every INSERT. Zero-latency aggregation without cron jobs or ETL.
+                    </div>
+                </div>
+
+                <div class="bp-card bp-blue">
+                    <div class="bp-card-header">
+                        <div class="bp-card-icon">🎯</div>
+                        <div class="bp-card-title">ORDER BY Matches Query Patterns</div>
+                    </div>
+                    <div class="bp-card-body">
+                        Every table leads with <code>tenant_id</code> to enable partition pruning on multi-tenant queries. Time columns second for range scans: <code>(tenant_id, event_time, location_id)</code>.
+                    </div>
+                </div>
+
+                <div class="bp-card bp-orange">
+                    <div class="bp-card-header">
+                        <div class="bp-card-icon">⏰</div>
+                        <div class="bp-card-title">TTL Auto-Expiration</div>
+                    </div>
+                    <div class="bp-card-body">
+                        <code>TTL toDateTime(event_time) + INTERVAL 90 DAY</code> on events, 7-day on connector health. ClickHouse automatically drops expired partitions &mdash; no manual cleanup.
+                    </div>
+                </div>
+
+                <div class="bp-card bp-teal">
+                    <div class="bp-card-header">
+                        <div class="bp-card-icon">🔍</div>
+                        <div class="bp-card-title">Bloom Filter &amp; Set Indexes</div>
+                    </div>
+                    <div class="bp-card-body">
+                        <code>bloom_filter</code> on <code>person_id</code> and <code>badge_id</code> for point lookups. <code>set(2)</code> on <code>result</code> (only grant/deny). Skips entire granules when key not present.
+                    </div>
+                </div>
+
+                <div class="bp-card bp-pink">
+                    <div class="bp-card-header">
+                        <div class="bp-card-icon">🚀</div>
+                        <div class="bp-card-title">Nullable Minimization</div>
+                    </div>
+                    <div class="bp-card-body">
+                        <code>String DEFAULT ''</code> instead of <code>Nullable(String)</code> for 15+ columns. Avoids the hidden UInt8 null-tracking column overhead. Nullable reserved only for semantically meaningful absence (dates).
+                    </div>
+                </div>
+
+                <div class="bp-card bp-blue">
+                    <div class="bp-card-header">
+                        <div class="bp-card-icon">📅</div>
+                        <div class="bp-card-title">Monthly Partitioning</div>
+                    </div>
+                    <div class="bp-card-body">
+                        <code>PARTITION BY toYYYYMM(event_time)</code> on fact_access_events. Enables efficient time-range pruning and TTL drops entire months. Partition count stays manageable (&lt;100 per table).
+                    </div>
+                </div>
+
+                <div class="bp-card bp-green">
+                    <div class="bp-card-header">
+                        <div class="bp-card-icon">📊</div>
+                        <div class="bp-card-title">Baseline Anomaly Detection</div>
+                    </div>
+                    <div class="bp-card-body">
+                        <code>rollup_baseline_hour_of_week</code> stores per-door, per-hour averages + standard deviations. <code>v_insight_deny_spikes</code> compares real-time data against baselines using z-score thresholds.
+                    </div>
+                </div>
+
+                <div class="bp-card bp-orange">
+                    <div class="bp-card-header">
+                        <div class="bp-card-icon">🔄</div>
+                        <div class="bp-card-title">ReplacingMergeTree for Mutable State</div>
+                    </div>
+                    <div class="bp-card-body">
+                        Access requests progress through workflow states (submitted &rarr; approved &rarr; provisioned). <code>ReplacingMergeTree(updated_at)</code> keeps only the latest version. Query with <code>FINAL</code> for consistency.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats footer -->
+            <div style="display: flex; justify-content: center; gap: 40px; margin-top: 48px; flex-wrap: wrap;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; background: linear-gradient(90deg, #ed64a6, #f56565); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">8</div>
+                    <div style="font-size: 0.75rem; color: #a0aec0; margin-top: 4px;">Physical Tables</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; background: linear-gradient(90deg, #48bb78, #38b2ac); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">3</div>
+                    <div style="font-size: 0.75rem; color: #a0aec0; margin-top: 4px;">Rollup Tables</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; background: linear-gradient(90deg, #9f7aea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">12</div>
+                    <div style="font-size: 0.75rem; color: #a0aec0; margin-top: 4px;">Query Views</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; background: linear-gradient(90deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">2</div>
+                    <div style="font-size: 0.75rem; color: #a0aec0; margin-top: 4px;">Materialized Views</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; background: linear-gradient(90deg, #f6ad55, #ed8936); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">4</div>
+                    <div style="font-size: 0.75rem; color: #a0aec0; margin-top: 4px;">Engine Types</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; font-weight: 700; background: linear-gradient(90deg, #68d391, #4fd1c5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">10</div>
+                    <div style="font-size: 0.75rem; color: #a0aec0; margin-top: 4px;">Best Practices</div>
+                </div>
+            </div>
+        </div>
+
         <footer>
             <p>ClearView Intelligence - Physical Identity & Access Management</p>
             <p style="margin-top: 10px;">Built with Next.js, React, ClickHouse, MySQL, Debezium, Redpanda</p>
@@ -817,7 +1559,7 @@
         // Keyboard navigation
         document.addEventListener('keydown', (e) => {
             const current = [...document.querySelectorAll('.nav-tab')].findIndex(t => t.classList.contains('active'));
-            if (e.key === 'ArrowRight' && current < 3) showSlide(current + 1);
+            if (e.key === 'ArrowRight' && current < 4) showSlide(current + 1);
             if (e.key === 'ArrowLeft' && current > 0) showSlide(current - 1);
         });
     </script>
